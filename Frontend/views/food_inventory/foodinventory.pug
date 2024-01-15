@@ -1,0 +1,70 @@
+extends ../layout
+
+block content
+  h1 Food Inventory
+  form#add-item-form(method='post', action='foodinventory/api/items/')
+    table.table.table-striped
+      thead
+        tr
+          th Status
+          th Name
+          th Quantity
+          th Date Prepared
+          th Type
+          th Actions
+      tbody
+        tr
+          td
+            span New Item
+          td
+            input.form-control(type='text', name='name', required=true)
+          td
+            input.form-control(type='number', name='quantity', required=true, min='0')
+          td
+            input.form-control(type='date', name='dateprepared', required=true)
+          td
+            select.form-control(name='type')
+              option(value='protein') Protein
+              option(value='vegetable') Vegetable
+              option(value='fruit') Fruit
+              option(value='grain') Grain
+              option(value='dairy') Dairy
+          td
+            button.btn.btn-primary(type='submit') Add Item
+      if items && items.length > 0
+        each item in items
+          tr
+            td
+              span.badge(style=item.quantity > 0 ? 'background-color: green;' : 'background-color: red;') #{item.quantity > 0 ? 'Available' : 'Not Available'}
+            td #{item.name}
+            td
+              input.form-control(data-name='quantity' type='number', value=item.quantity, data-id=item.id, min='0', onchange='updateItem(this)')
+            td
+              input.form-control(data-name='dateprepared' type='date', value=item.dateprepared.split("T")[0], data-id=item.id, onchange='updateItem(this)')
+            td #{item.type}
+            td
+              button.btn.btn-danger(type='button', onclick=`deleteItem('${item.id}', event)`) Delete
+  
+  script(src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js")        
+  
+  script.
+    function updateItem(element) {
+      const id = element.getAttribute('data-id');
+      const value = element.value;
+      const field = element.dataset.name;
+      console.log(field)
+      axios.patch(`foodinventory/api/items/${id}`, { [field]: value })
+        .then(response => window.location.reload())
+        .catch(error => console.error(error));
+    }
+    
+    function deleteItem(id, event) {
+      if(event) {
+        event.preventDefault();
+      }
+      
+      axios.delete(`foodinventory/api/items/${id}`)
+        .then(response => window.location.reload())
+        .catch(error => console.error(error));
+    }
+

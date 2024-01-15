@@ -1,0 +1,49 @@
+extends ../layout
+
+block content
+  // Pagination Controls
+  nav(aria-label='Page navigation')
+    ul.pagination.justify-content-center
+      // Previous link
+      li.page-item(class=currentIndex === 0 ? 'disabled' : '')
+        if currentIndex > 0
+          a.page-link(href=`/menus/?date=${dates[currentIndex - 1]}`) Previous
+        else
+          span.page-link Previous
+      
+      // Current date page indicator
+      li.page-item.active
+        a.page-link(href=`/menus/?date=${dates[currentIndex]}`)= new Date(dates[currentIndex]).toDateString()
+      
+      // Next link
+      li.page-item(class=currentIndex === dates.length - 1 ? 'disabled' : '')
+        if currentIndex < dates.length - 1
+          a.page-link(href=`/menus/?date=${dates[currentIndex + 1]}`) Next
+        else
+          span.page-link Next
+
+  .container
+    // Lunch Menu Section
+    .row.my-4
+      .col-md-6
+        h4 Lunch
+          .row.g-3.pt-3
+            each item in menus.Lunch.items
+              .col-auto 
+                .btn.btn-primary.position-relative #{item.name}
+                  // Quantity Badge (inbox style)
+                  span.badge.rounded-pill.bg-danger.position-absolute.top-0.start-100.translate-middle #{item.quantity}
+                  //- Screen readers will ignore .visually-hidden elements but it helps users with assistive technologies
+                  .visually-hidden Lunch item quantity
+    // Dinner Menu Section
+    .row.my-4
+      .col-md-6
+        h4 Dinner
+          .row.g-3.pt-3
+            each item in menus.Dinner.items
+              .col-auto 
+                .btn.btn-primary.position-relative #{item.name}
+                  // Quantity Badge (inbox style)
+                  span.badge.rounded-pill.bg-danger.position-absolute.top-0.start-100.translate-middle #{item.quantity}
+                  //- Screen readers will ignore .visually-hidden elements but it helps users with assistive technologies
+                  .visually-hidden Lunch item quantity

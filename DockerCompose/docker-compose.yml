@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  backendapi:
+    image: baby_organiser_backend_api
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      - mongodb
+    networks:
+      baby_org_net: null
+
+  frontend:
+    image: baby_organiser_frontend
+    env_file:
+      - .env
+    depends_on:
+      - backendapi
+    networks:
+      baby_org_net: null
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backendapi
+      - frontend
+    networks:
+      baby_org_net:
+      vlan23:
+        ipv4_address: ${BABY_NGINX_IP}
+  postgres:
+    image: postgres:latest
+    env_file:
+      - .env
+    networks:
+      baby_org_net: null
+
+  mongodb:
+    image: mongo:latest
+    env_file:
+      - .env
+    networks:
+      baby_org_net: null
+
+networks:
+  baby_org_net:
+    name: baby_org_net
+    internal: true
+  vlan23:
+    name: vlan23
+    driver: ipvlan
+    driver_opts:
+      parent: vlan23
+      ipvlan_mode: l2
+    ipam:
+      config:
+        - subnet: 10.2.3.0/24
+          gateway: 10.2.3.1
