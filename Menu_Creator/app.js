@@ -64,19 +64,39 @@ async function getMenuItemsFromChatGPT(inventory, rules) {
         "Lunch": {
             "items": [
                 {
-                    "name": "Example Food",
-                    "quantity": 3,
+                    "name": "Pork",
+                    "quantity": 2,
                     "id": 3
-                }
+                },
+                {
+                  "name": "Spinach",
+                  "quantity": 2,
+                  "id": 3
+              },
+              {
+                "name": "Red kidney beans",
+                "quantity": 1,
+                "id": 3
+            }
             ]
         },
         "Dinner": {
             "items": [
                 {
-                    "name": "Example Food",
-                    "quantity": 3,
+                    "name": "beef",
+                    "quantity": 2,
                     "id": 3
-                }
+                },
+                {
+                  "name": "Beetroot",
+                  "quantity": 1,
+                  "id": 3
+              },
+              {
+                "name": "Spinach",
+                "quantity": 1,
+                "id": 3
+            }
             ]
         }
     }]`;
@@ -93,7 +113,7 @@ async function getMenuItemsFromChatGPT(inventory, rules) {
         model: "gpt-3.5-turbo-1106",
         response_format: {"type": "json_object"},
         messages: messages,
-        max_tokens: 1500,
+        max_tokens: 2000,
         temperature: 0.7
       });
       console.log(response)
@@ -114,10 +134,10 @@ async function generateAndPostMenus() {
     const inventory = await fetchInventory();
     const rules = { // Define your rules for Lunch and Dinner.
       Numberofdays: "Generate 5 days",
-      Inventory: "The inventory is provided in the format <Item> - <Qty> - <ID) - <TYPE> each line represents a single item",
-      Lunch: "Protein/Meat QTY: 2 Vegetables QTY: 3, Each item can only be allocated a maximum of 2 times",
-      Dinner: "Protein/Meat QTY: 2 Vegetables QTY: 2, one item can be allocated 2 times, all others can only be allocated once",
-      Fruit: "Do not allocate inventory with type fruit",
+      Inventory: "The inventory is provided in the format <Item> - <QTY> - <ID> - <TYPE> each line represents a single item",
+      Lunch: "Total QTY 5, minimum 2 protein/meat items and 3 vegtables the same item can be allocated a maximum of 2 times",
+      Dinner: "Total of QTY of 4 made up of Protein/Meat QTY: 2 Vegetables QTY: 2, one item can be allocated 2 times, all others can only be allocated once",
+      Fruit: "Fruit should not be allocated to Lunch or Dinner",
       FishTwiceAWeek: true,
       Returndateformat: "YYYY-MM-DD",
       CurrentDate: date
