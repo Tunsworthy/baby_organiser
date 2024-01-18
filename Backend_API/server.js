@@ -3,7 +3,7 @@ const express = require('express');
 const fs = require('fs');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
-const ensureFoodTableExists = require('./config/foodtablecreator'); // Adjust the path as needed
+const ensurepostgresTablesExists = require('./config/postgrestablecreation'); // Adjust the path as needed
 
 
 const { connectMongoDB } = require('./config/mongoConnection.js');
@@ -49,7 +49,7 @@ module.exports = app;
 // e.g., app.use('/api/items', itemsRouter);
 
 // Run the function to make sure the "food" table exists
-ensureFoodTableExists().then(() => {
+ensurepostgresTablesExists().then(() => {
   console.log('Table check is complete.');
 }).catch(err => {
   console.error('Failed to check/create table:', err);

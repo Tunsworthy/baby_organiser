@@ -8,7 +8,8 @@ const bodyParser = require('body-parser');
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
 const foodInventoryRouter = require('./routes/foodInventory');
-const menusRouter = require('./routes/menus')
+const menusRouter = require('./routes/menus');
+const alertsRouter = require('./routes/alerts');
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/foodinventory', foodInventoryRouter);
 app.use('/menus',menusRouter);
+app.use('/alerts',alertsRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
