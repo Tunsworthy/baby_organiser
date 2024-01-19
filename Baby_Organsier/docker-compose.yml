@@ -1,5 +1,11 @@
 version: '3.8'
 
+volumes: 
+    postgres_data:
+    postgres_data_pgdata:
+    mongodb_data:
+    mongodb_config:
+
 services:
   backendapi:
     image: baby_organiser_backend_api
