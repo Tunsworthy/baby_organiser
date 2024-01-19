@@ -27,7 +27,7 @@ Ensure you have the following installed:
 
 1. Clone the repository to your local machine:
 ```bash
-git clone https://github.com/your-username/baby-food-manager.git
+git clone https://github.com/Tunsworthy/baby_organiser.git
 cd baby-food-manager
 ```
 
@@ -42,10 +42,6 @@ yarn install
 
 3. Set up your environment variables by creating a `.env` file with the necessary configurations for Postgres and MongoDB connections.
 
-4. Initialize the databases and run migrations (sample commands provided):
-```bash
-npm run db:setup
-```
 
 5. Start the server:
 ```bash
