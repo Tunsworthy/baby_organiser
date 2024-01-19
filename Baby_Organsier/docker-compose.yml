@@ -39,6 +39,9 @@ services:
       - .env
     networks:
       baby_org_net: null
+    volumes:
+      - postgres_data:/var/lib/postgresql
+      - postgres_data_pgdata:/var/lib/postgresql/data
 
   mongodb:
     image: mongodb-raspberrypi4-unofficial-r7.0.4
@@ -46,6 +49,9 @@ services:
       - .env
     networks:
       baby_org_net: null
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
 
 networks:
   baby_org_net:
