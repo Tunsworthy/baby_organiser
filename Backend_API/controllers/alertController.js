@@ -57,10 +57,10 @@ exports.createAlert = async (req, res) => {
 exports.updateAlertById = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, type, message, status } = req.body;
+        const {status } = req.body;
         const result = await db.query(
-            'UPDATE alerts SET name = $1, type = $2, message = $3, status = $4 WHERE id = $5 RETURNING *',
-            [name, type, message, status, id]
+            'UPDATE alerts SET status = $1 WHERE id = $2 RETURNING *',
+            [status, id]
         );
 
         if (result.rowCount === 0) {
