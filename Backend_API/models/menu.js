@@ -3,7 +3,11 @@ const mongoose = require('mongoose');
 const itemSchema = new mongoose.Schema({
     name: String,
     quantity: Number,
-    id: Number
+    id: Number,
+    allocated: {
+        type: Boolean,
+        default: false // This ensures that newly created items have "allocated" set to FALSE by default.
+    }
 });
 
 const menuSchema = new mongoose.Schema({

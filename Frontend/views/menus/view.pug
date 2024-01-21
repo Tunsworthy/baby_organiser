@@ -27,23 +27,28 @@ block content
     .row.my-4
       .col-md-6
         h4 Lunch
-          .row.g-3.pt-3
+          .row.pt-3
             each item in menus.Lunch.items
-              .col-auto 
-                .btn.btn-primary.position-relative #{item.name}
-                  // Quantity Badge (inbox style)
-                  span.badge.rounded-pill.bg-danger.position-absolute.top-0.start-100.translate-middle #{item.quantity}
-                  //- Screen readers will ignore .visually-hidden elements but it helps users with assistive technologies
-                  .visually-hidden Lunch item quantity
+              //- Main container for the input group
+              div.input-group.mb-3
+                input.form-control.text-truncate(type="text" value=`${item.name} : ${item.quantity}` readonly) 
+                button.btn.btn-outline-secondary(type="button", data-item-id=item.id data-quantity=item.quantity,disabled=item.allocated ? true : false, data-meal-type="Lunch", onclick="updateInventory(this)")
+                  i.fas.fa-cart-shopping
+                button.btn.btn-outline-secondary(type="button")
+                  i.fas.fa-arrow-right-arrow-left
+
     // Dinner Menu Section
     .row.my-4
       .col-md-6
         h4 Dinner
           .row.g-3.pt-3
             each item in menus.Dinner.items
-              .col-auto 
-                .btn.btn-primary.position-relative #{item.name}
-                  // Quantity Badge (inbox style)
-                  span.badge.rounded-pill.bg-danger.position-absolute.top-0.start-100.translate-middle #{item.quantity}
-                  //- Screen readers will ignore .visually-hidden elements but it helps users with assistive technologies
-                  .visually-hidden Lunch item quantity
+              //- Main container for the input group
+              div.input-group.mb-3
+                input.form-control.text-truncate(type="text" value=`${item.name} : ${item.quantity}` readonly) 
+                button.btn.btn-outline-secondary(type="button", data-item-id=item.id data-quantity=item.quantity,disabled=item.allocated ? true : false, data-meal-type="Dinner", onclick="updateInventory(this)")
+                  i.fas.fa-cart-shopping
+                button.btn.btn-outline-secondary(type="button")
+                  i.fas.fa-arrow-right-arrow-left
+
+  script(src="/javascripts/updateInventory.js")

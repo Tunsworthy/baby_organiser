@@ -31,6 +31,38 @@ exports.getMenuById = async (req, res) => {
     }
 };
 
+exports.getMenuByDate = async (req, res) => {
+    try {
+        // Assuming req.params.date is in the format 'YYYY-MM-DD'
+        const dateString = req.params.date; 
+        const date = new Date(dateString);
+        
+        // Set time to 00:00:00 for the beginning of the date
+        date.setUTCHours(0, 0, 0, 0);
+
+        // Create a new date object for the end of the day
+        const nextDay = new Date(date);
+        nextDay.setUTCHours(23, 59, 59, 999);
+
+        // Find menus on the specified date
+        const menus = await Menu.find({
+            date: {
+                $gte: date,
+                $lte: nextDay
+            }
+        });
+
+        if (!menus || menus.length === 0) {
+            return res.status(404).json({ message: 'No menus found for the specified date' });
+        }
+
+        res.status(200).json(menus);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+
 exports.updateMenu = async (req, res) => {
     try {
         const updatedMenu = await Menu.findByIdAndUpdate(

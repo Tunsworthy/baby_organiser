@@ -11,6 +11,7 @@ html(lang='en')
     // Additional styles if needed
 
   body
+    div#flash-message.alert.alert-success(role='alert' style='display:none; position: fixed; top: 20px; right: 20px; z-index: 1000;') 
     .d-flex.flex-column.flex-lg-row.h-100
       // Fullscreen Sidebar Menu for Desktop (lg screens)
       nav.bg-light.border-end#desktopSidebar.d-none.d-lg-block(style='height: 100vh;')
@@ -50,4 +51,5 @@ html(lang='en')
     // Font Awesome for icons (optional)
     script(src='https://kit.fontawesome.com/4cef10ddbd.js' crossorigin='anonymous')
     script(src='https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js')
+    script(src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js")  
     // Additional scripts if needed
