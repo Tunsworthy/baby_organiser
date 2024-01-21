@@ -30,7 +30,7 @@ block content
           .row.pt-3
             each item in menus.Lunch.items
               //- Main container for the input group
-              div.input-group
+              div.input-group.mb-3
                 input.form-control.text-truncate(type="text" value=`${item.name} : ${item.quantity}` readonly) 
                 button.btn.btn-outline-secondary(type="button", data-item-id=item.id data-quantity=item.quantity,disabled=item.allocated ? true : false, data-meal-type="Lunch", onclick="updateInventory(this)")
                   i.fas.fa-cart-shopping
@@ -44,7 +44,7 @@ block content
           .row.g-3.pt-3
             each item in menus.Dinner.items
               //- Main container for the input group
-              div.input-group
+              div.input-group.mb-3
                 input.form-control.text-truncate(type="text" value=`${item.name} : ${item.quantity}` readonly) 
                 button.btn.btn-outline-secondary(type="button", data-item-id=item.id data-quantity=item.quantity,disabled=item.allocated ? true : false, data-meal-type="Dinner", onclick="updateInventory(this)")
                   i.fas.fa-cart-shopping
