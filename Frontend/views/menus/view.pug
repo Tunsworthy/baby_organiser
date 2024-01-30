@@ -5,20 +5,21 @@ block content
   nav(aria-label='Page navigation')
     ul.pagination.justify-content-center
       // Previous link
-      li.page-item(class=currentIndex === 0 ? 'disabled' : '')
-        if currentIndex > 0
-          a.page-link(href=`/menus/?date=${dates[currentIndex - 1]}`) Previous
+      li.page-item(class=prevUrl === null ? 'disabled' : '')
+        if prevUrl
+          a.page-link(href=prevUrl) Previous
         else
           span.page-link Previous
       
       // Current date page indicator
       li.page-item.active
-        a.page-link(href=`/menus/?date=${dates[currentIndex]}`)= new Date(dates[currentIndex]).toDateString()
+        a.page-link(href=currentUrl)= currentdate
+        
       
       // Next link
-      li.page-item(class=currentIndex === dates.length - 1 ? 'disabled' : '')
-        if currentIndex < dates.length - 1
-          a.page-link(href=`/menus/?date=${dates[currentIndex + 1]}`) Next
+      li.page-item(class=nextUrl === null ? 'disabled' : '')
+        if nextUrl
+          a.page-link(href=nextUrl) Next
         else
           span.page-link Next
 
@@ -31,10 +32,10 @@ block content
             each item in menus.Lunch.items
               //- Main container for the input group
               div.input-group.mb-3
-                input.form-control.text-truncate(type="text" value=`${item.name} : ${item.quantity}` readonly) 
-                button.btn.btn-outline-secondary(type="button", data-item-id=item.id data-quantity=item.quantity,disabled=item.allocated ? true : false, data-meal-type="Lunch", onclick="updateInventory(this)")
+                input.form-control.text-truncate(type="text" value=`${item.name} : ${item.quantity}` readonly)
+                button.btn.btn-outline-secondary(type="button",name="allocate", data-item-id=item.id,data-item-name=item.name, data-quantity=item.quantity,disabled=item.allocated ? true : false, data-meal-type="Lunch", onclick="updateInventory(this)")
                   i.fas.fa-cart-shopping
-                button.btn.btn-outline-secondary(type="button")
+                button.btn.btn-outline-secondary(type="button",name="sub", data-item-id=item.id,data-item-name=item.name, data-quantity=item.quantity,disabled=item.allocated ? true : false, data-meal-type="Lunch", onclick="updateInventory(this)")
                   i.fas.fa-arrow-right-arrow-left
 
     // Dinner Menu Section
@@ -46,9 +47,9 @@ block content
               //- Main container for the input group
               div.input-group.mb-3
                 input.form-control.text-truncate(type="text" value=`${item.name} : ${item.quantity}` readonly) 
-                button.btn.btn-outline-secondary(type="button", data-item-id=item.id data-quantity=item.quantity,disabled=item.allocated ? true : false, data-meal-type="Dinner", onclick="updateInventory(this)")
+                button.btn.btn-outline-secondary(type="button",name ="allocate", data-item-id=item.id, data-item-name=item.name, data-quantity=item.quantity,disabled=item.allocated ? true : false, data-meal-type="Dinner", onclick="updateInventory(this)")
                   i.fas.fa-cart-shopping
-                button.btn.btn-outline-secondary(type="button")
+                button.btn.btn-outline-secondary(type="button",name="sub", data-item-id=item.id,data-item-name=item.name, data-quantity=item.quantity,disabled=item.allocated ? true : false, data-meal-type="Dinner", onclick="updateInventory(this)")
                   i.fas.fa-arrow-right-arrow-left
 
   script(src="/javascripts/updateInventory.js")

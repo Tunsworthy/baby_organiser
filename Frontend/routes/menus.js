@@ -1,40 +1,55 @@
 const express = require('express');
 const axios = require('axios');
+const { parse } = require('dotenv');
 require('dotenv').config();
 
 const router = express.Router();
 
-router.get('/', async (req, res) => {
+  router.get('/', async (req, res) => {
     try {
-      // Fetch all the menus from the API (this could be paginated in your actual implementation)
-      const response = await axios.get(`${process.env.SERVER}/api/menus`);
-      const menusData = response.data;
-  
-      // Extract unique dates from the menus
-      const uniqueDates = [...new Set(menusData.map(menu => menu.date))].sort();
-  
+      
       // Determine the requested date
-      const requestedDate = req.query.date || uniqueDates[0]; // Defaults to the first date if not specified
-      const currentIndex = uniqueDates.indexOf(requestedDate);
-    
-      // Get next and previous date indices for pagination
-      const previousIndex = currentIndex > 0 ? currentIndex - 1 : null;
-      const nextIndex = currentIndex < uniqueDates.length - 1 ? currentIndex + 1 : null;
-    
-      // Construct pagination URLs
-      const baseUrl = '/menus?date=';
-      const prevUrl = previousIndex !== null ? `${baseUrl}${uniqueDates[previousIndex]}` : null;
-      const nextUrl = nextIndex !== null ? `${baseUrl}${uniqueDates[nextIndex]}` : null;
+      const currentDate = new Date().toISOString().split('T')[0]; // Get the current date
+      const requestedDate = req.query.date || currentDate; // Use the current date if not specified in query
 
-      // Find the menu for the requested date
-      const menus = menusData.find(menu => menu.date === requestedDate);
+      const requestedDateObject = new Date(requestedDate);
+      let previousDate = new Date(requestedDate);
+      let nextDate =  new Date(requestedDate);
+      // Calculate the previous day
+      previousDate = new Date(previousDate.setDate(previousDate.getDate() - 1)).toISOString().split('T')[0];
+      // Calculate the next day
+      nextDate = new Date(nextDate.setDate(nextDate.getDate() + 1)).toISOString().split('T')[0];
+
+      // Fetch all the menus from the API (this could be paginated in your actual implementation)
+      const response = await axios.get(`${process.env.SERVER}/api/menus/bydate/${requestedDate}`);
+      const menusData = response.data[0];
+
+      //function for checking the next and previous dates
+      async function checkDate(date){
+          try{
+          const reponse = await axios.get(`${process.env.SERVER}/api/menus/bydate/${date}`);
+          return true;
+        }
+        catch(error){
+          //console.error(error);
+          return false
+        }
+      }
+      //check previous and next day exists
+      const previousreponse = await checkDate(previousDate)
+      const nextreponse = await checkDate(nextDate)
+
+  
+      // Construct pagination URLs
+      const baseUrl = `/menus?date=${requestedDate}`;
+      const prevUrl = previousreponse !== false ? `/menus?date=${previousDate}` : null;
+      const nextUrl = nextreponse !== false ? `/menus?date=${nextDate}` : null;
   
       // Render the template with the fetched menu for the requested date and the array of unique dates
-          // Render the template with the appropriate data
-    res.render('menus/view', {
-        menus: menus,
-        dates: uniqueDates,
-        currentIndex: currentIndex,
+      res.render('menus/view', {
+        menus: menusData,
+        currentdate: requestedDateObject.toDateString(),
+        currentUrl: baseUrl,
         prevUrl: prevUrl,
         nextUrl: nextUrl,
       });
@@ -45,8 +60,63 @@ router.get('/', async (req, res) => {
     }
   });
   
+  router.post('/sub', async(req,res)=> {
+    console.log(req.body)
+
+    const itemjson = JSON.parse(req.body.item)
+
+    const previousid = parseInt(req.body.PreviousID);
+    const newquantity = parseInt(req.body.quantity);
+    const newid = parseInt(itemjson.id);
+    const newname = itemjson.name;
+    const mealdate = req.body.MDate.split('T')[0];
+    const mealtype = req.body.MType; 
+    const mealurl = `${process.env.SERVER}/api/menus/bydate/${mealdate}`;
+
+    const menuResponse = await axios.get(mealurl);
+    try{
+      const menus = menuResponse.data[0];
+      let itemToUpdate = menus[mealtype].items.find(item => item.id === previousid);
+      
+      itemToUpdate.id = newid
+      itemToUpdate.name = newname
+      itemToUpdate.quantity = newquantity
+
+      // Post the updated menu back to the server via the API
+      let updatemenu = await axios.put(`${process.env.SERVER}/api/menus/${menus._id}`, menus);
+      console.log(menus)
+
+    } catch (error) {
+    // Error communicating with the backend API
+    res.status(500).json({ message: 'Error communicating with backend API', error });
+    }
+
+    res.redirect('/menus?date=' + mealdate);
+  })
+
+  router.get('/sub', async(req, res) => {
+    
+    const itemId = req.query.itemId;
+    const itemName = req.query.itemName;
+    const quantity = req.query.quantity;
+    const currentDate = req.query.currentDate;
+    const mealType = req.query.mealType;
 
 
+    const items = await axios.get(`${process.env.SERVER}/api/items`);
+    console.log(items.data.rows)
 
+    res.render('menus/sub', {
+      items: items.data.rows,
+      previousitem: {
+        itemId: itemId,
+        name: itemName,
+        quantity: quantity,
+        currentDate: currentDate,
+        mealType: mealType
+       }
+    });
+  });
+  
 
 module.exports = router;

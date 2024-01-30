@@ -54,5 +54,12 @@ Alets API
 
 Meuns feature
     page load takes you to cureent day
-    when you click on the item it 'allocates' it - changing the colour and deducting the qty from the inventory
-    update menus API to provide menu by date (for dashboard and)
+    when you click on the item it 'allocates' it - changing the colour and deducting the qty from the inventory - Done
+    update menus API to provide menu by date (for dashboard and) - Done
+
+Food Inventory 
+    Sortable List
+    Default Available at the top
+
+Alerts Generator
+    Stock running low
