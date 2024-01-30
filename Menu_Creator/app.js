@@ -128,17 +128,18 @@ async function getMenuItemsFromChatGPT(inventory, rules) {
 
 // Function to generate menus for 7 days and post it back to the server
 async function generateAndPostMenus() {
-    const date = new Date();
+    let date = new Date();
+    //date = new Date(date.setDate(date.getDate() + 1)).toISOString().split('T')[0];
 
     try {
     const inventory = await fetchInventory();
     const rules = { // Define your rules for Lunch and Dinner.
-      Numberofdays: "Generate 5 days",
+      Generation: "Generate as many days as you can following the rules",
       Inventory: "The inventory is provided in the format <Item> - <QTY> - <ID> - <TYPE> each line represents a single item",
       Lunch: "Total QTY 5, minimum 2 protein/meat items and 3 vegtables the same item can be allocated a maximum of 2 times",
       Dinner: "Total of QTY of 4 made up of Protein/Meat QTY: 2 Vegetables QTY: 2, one item can be allocated 2 times, all others can only be allocated once",
       Fruit: "Fruit should not be allocated to Lunch or Dinner",
-      FishTwiceAWeek: true,
+      Fish: "Fish on Monday and Thursday",
       Returndateformat: "YYYY-MM-DD",
       CurrentDate: date
     };
