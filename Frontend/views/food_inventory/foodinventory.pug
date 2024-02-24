@@ -9,6 +9,7 @@ block content
           th Status
           th Name
           th Quantity
+          th Last Served
           th Date Prepared
           th Type
           th Actions
@@ -20,6 +21,8 @@ block content
             input.form-control(type='text', name='name', required=true)
           td
             input.form-control(type='number', name='quantity', required=true, min='0')
+          td 
+            input.form-control(type='date', name='lastallocated', value=null, readonly)
           td
             input.form-control(type='date', name='dateprepared', required=true)
           td
@@ -40,6 +43,10 @@ block content
             td #{item.name}
             td
               input.form-control(data-name='quantity' type='number', value=item.quantity, data-id=item.id, min='0', onchange='updateItem(this)')
+            td
+              input.form-control(data-name='lastallocated', type='date', 
+                value= item.lastallocated ? item.lastallocated.split("T")[0] : '', 
+                data-id=item.id, onchange='updateItem(this)')
             td
               input.form-control(data-name='dateprepared' type='date', value=item.dateprepared.split("T")[0], data-id=item.id, onchange='updateItem(this)')
             td #{item.type}
