@@ -42,11 +42,11 @@ exports.getSingleItem = async (req, res) => {
 
 exports.createItem = (req, res) => {
     console.log(req.body)
-    const { name, quantity, dateprepared, type } = req.body;
+    const { name, quantity, dateprepared, type, lastallocated} = req.body;
     
     // Add SQL query to insert a new item into the food inventory table
-    const query = 'INSERT INTO food(name, quantity, dateprepared, type) VALUES($1, $2, $3, $4)';
-    db.query(query, [name, quantity, dateprepared, type], (error, results) => {
+    const query = 'INSERT INTO food(name, quantity, dateprepared, type, lastallocated) VALUES($1, $2, $3, $4, $5)';
+    db.query(query, [name, quantity, dateprepared, type, lastallocated], (error, results) => {
         if (error) {
             return res.status(400).json({ error });
         }
@@ -56,7 +56,7 @@ exports.createItem = (req, res) => {
 
 exports.updateItem = (req, res) => {
     const id = req.params.id;
-    let { quantity, dateprepared, type } = req.body;
+    let { quantity, dateprepared, type,lastallocated } = req.body;
     let fieldsToUpdate = [];
     let queryValues = [];
     let querySetParts = [];
@@ -76,6 +76,12 @@ exports.updateItem = (req, res) => {
         fieldsToUpdate.push('type');
         queryValues.push(type);
         querySetParts.push(`type = $${queryValues.length}`);
+    }
+
+    if(lastallocated !== undefined){
+        fieldsToUpdate.push('lastallocated');
+        queryValues.push(lastallocated);
+        querySetParts.push(`lastallocated = $${queryValues.length}`);
     }
 
     if (fieldsToUpdate.length === 0) {

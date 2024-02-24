@@ -1,22 +1,35 @@
 extends ../layout
+
 block content
     .container
-      h1 Substitute Item
-      span
-        b Previous Item: 
-        | #{previousitem.name} - #{previousitem.quantity}
-      form(action="/menus/sub/" method="POST")
-        label(for="item") Item:
-        select#item.form-control(name="item")
-          each item in items
-            if item.quantity > 0
-              option(value={id: item.id, name: item.name})= item.name
-          // Add more options as needed
-        br
-        label(for="quantity") Quantity:
-        input#quantity.form-control(type="number", name="quantity" min="1" value="1")
-        input(type="hidden", name="PreviousID", value=previousitem.itemId)
-        input(type="hidden", name="MDate", value=previousitem.currentDate)
-        input(type="hidden", name="MType", value=previousitem.mealType)
-        br
-        button.btn.btn-primary(type="submit") Submit
+        h1 Substitute Item
+        span
+            b Previous Item: 
+            | #{previousitem.name} - #{previousitem.quantity}
+        p#lastAllocatedValue Last Served: N/A
+        form(action="/menus/sub/" method="POST")
+            label(for="item") Item:
+            select#item.form-control(name="item" onchange="updateLastAllocated(this)")
+                each item in items
+                    if item.quantity > 0
+                        option(value={id: item.id, name: item.name, lastallocated: item.lastallocated})= item.name
+            br
+            label(for="quantity") Quantity:
+            input#quantity.form-control(type="number", name="quantity", min="1", value="1")
+            input(type="hidden", name="PreviousID", value=previousitem.itemId)
+            input(type="hidden", name="MDate", value=previousitem.currentDate)
+            input(type="hidden", name="MType", value=previousitem.mealType)
+            br
+            button.btn.btn-primary(type="submit") Submit
+
+    script.
+        function updateLastAllocated(select) {
+            console.log('in funcation')
+            console.log(JSON.parse(select.value).lastallocated)
+            let lastAllocateddate = JSON.parse(select.value).lastallocated
+          
+            let lastAllocatedValueElement = document.getElementById('lastAllocatedValue');
+            let updatedate = lastAllocateddate ? lastAllocateddate.split("T")[0] : null;
+            lastAllocatedValueElement.textContent = "Last Served: " + (updatedate ? updatedate : 'N/A');
+            console.log(updatedate)
+        }
