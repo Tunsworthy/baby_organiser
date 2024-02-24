@@ -19,6 +19,8 @@ services:
 
   frontend:
     image: baby_organiser_frontend
+    environment:
+      - TZ="Australia/Sydney"
     env_file:
       - .env
     depends_on:

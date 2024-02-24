@@ -103,7 +103,7 @@ async function getMenuItemsFromChatGPT(inventory, rules) {
 
 
     messages = [
-        {"role": "system", "content": "You are a helpful assistant that creates a mixture of baby food form the supplied inventory for lunch and dinners, your replay should be output in JSON"},
+        {"role": "system", "content": "You are a helpful assistant that creates menus form the supplied inventory for lunch and dinners, your replay should be output in JSON"},
         {"role": "assistant", "content": jsonString},
         {"role": "user", "content": prompt}
     ];
@@ -113,7 +113,7 @@ async function getMenuItemsFromChatGPT(inventory, rules) {
         model: "gpt-3.5-turbo-1106",
         response_format: {"type": "json_object"},
         messages: messages,
-        max_tokens: 2000,
+        max_tokens: 3000,
         temperature: 0.7
       });
       console.log(response)
@@ -128,32 +128,33 @@ async function getMenuItemsFromChatGPT(inventory, rules) {
 
 // Function to generate menus for 7 days and post it back to the server
 async function generateAndPostMenus() {
-    let date = new Date();
+    let date = new Date().toISOString().split('T')[0];
     //date = new Date(date.setDate(date.getDate() + 1)).toISOString().split('T')[0];
 
     try {
     const inventory = await fetchInventory();
     const rules = { // Define your rules for Lunch and Dinner.
-      Generation: "Generate as many days as you can following the rules",
-      Inventory: "The inventory is provided in the format <Item> - <QTY> - <ID> - <TYPE> each line represents a single item",
-      Lunch: "Total QTY 5, minimum 2 protein/meat items and 3 vegtables the same item can be allocated a maximum of 2 times",
-      Dinner: "Total of QTY of 4 made up of Protein/Meat QTY: 2 Vegetables QTY: 2, one item can be allocated 2 times, all others can only be allocated once",
-      Fruit: "Fruit should not be allocated to Lunch or Dinner",
-      Fish: "Fish on Monday and Thursday",
+      Generation: "Provide 4 days of menus without breaking the rules from the current date",
+      //Inventory: "The inventory is provided in the format <Item> - <QTY> - <ID> - <TYPE> each line represents a single item",
+      Lunch: "Total QTY 6, minimum 2 protein items and 4 vegtables the same item can be allocated a maximum of 2 times",
+      Dinner: "Total of QTY of 5 made up of protein QTY: 2 Vegetables QTY: 3, one item can be allocated 2 times, all others can only be allocated once",
+      //Fruit: "Fruit should not be allocated to Lunch or Dinner",
+      Fish: "Salmon or sardine allocated once per menu generation",
+      //typeselection: "Items with type fish can only be served once per generation",
       Returndateformat: "YYYY-MM-DD",
       CurrentDate: date
     };
     
     let menus = [];
     const menuItems = await getMenuItemsFromChatGPT(inventory, rules);
-    //console.log("Received from ChatGPT")
-    //console.log(menuItems)
+    console.log("Received from ChatGPT")
+    console.log(menuItems)
     let menuitemsparse
     menuitemsparse = JSON.parse(menuItems)
-    //console.log("parsed JSON", menuitemsparse.menu )
+    console.log("parsed JSON", menuitemsparse.menus )
 
     // Post each menu to the API
-    for (const menu of menuitemsparse.menu) {
+    for (const menu of menuitemsparse.menus) {
         console.log("whats meaning posted?")
         console.log(menu)
       await axios.post(`${SERVER_URL}/api/menus`, menu);
