@@ -78,7 +78,7 @@ router.delete('/api/items/:id', async function(req, res, next) {
   }
 });
 
-
+//Allocate items
 router.post('/api/inventory/:id', async (req, res) => {
   console.log("in inventory post API")
   const itemId = parseInt(req.params.id);
@@ -88,6 +88,8 @@ router.post('/api/inventory/:id', async (req, res) => {
   console.log(typeof itemId)
   const mealurl = `${process.env.SERVER}/api/menus/bydate/${mealdate}`;
   const apiUrl = `${process.env.SERVER}/api/items/${itemId}`;
+  const currentDate = new Date().toISOString();
+
 
   try {
       // Fetch current quantity from the backend API
@@ -97,7 +99,7 @@ router.post('/api/inventory/:id', async (req, res) => {
       console.log(updatedquantity)
 
       if (updatedquantity >= 0) {
-          const updateResponse = await axios.patch(apiUrl, { quantity: updatedquantity });
+          const updateResponse = await axios.patch(apiUrl, { quantity: updatedquantity, lastallocated: currentDate });
           console.log(updateResponse.data)
           // Attempt to allocate the item to the menu
           try {
@@ -111,7 +113,7 @@ router.post('/api/inventory/:id', async (req, res) => {
               if (!menus) {
                   throw new Error('Menu not found.');
               }
-
+              //this should be updated to use the ID that is in the menu
               let itemToUpdate = menus[mealtype].items.find(item => item.id === itemId);
               
               console.log('menus:', menus);
@@ -129,6 +131,9 @@ router.post('/api/inventory/:id', async (req, res) => {
 
               // Post the updated menu back to the server via the API
               let updatemenu = await axios.put(`${process.env.SERVER}/api/menus/${menus._id}`, menus);
+
+              //Send the current date to the food inventory onto the 'lastallocated' for this item
+
               console.log(menus)
               // Respond with a success message
               res.json({ message: `Item ${itemToUpdate.name} QTY ${requestedQuantity} deducted from inventory` });

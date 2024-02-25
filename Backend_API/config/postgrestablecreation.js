@@ -20,8 +20,17 @@ CREATE TABLE IF NOT EXISTS food (
   name VARCHAR(50) NOT NULL,
   quantity INTEGER NOT NULL,
   dateprepared DATE,
-  type VARCHAR(50)
+  type VARCHAR(50),
+  lastallocated DATE
 );
+
+`;
+
+const alterFoodTableQuery = `
+
+ALTER TABLE food
+ADD COLUMN lastallocated DATE;
+
 `;
 
 // Check if the "alerts" table exists
@@ -48,7 +57,11 @@ CREATE TABLE IF NOT EXISTS alerts (
 );
 `;
 
-async function ensureTableExists(checkTableExistsQuery, createTableQuery, tableName) {
+const alterAlertsTableQuery = `
+
+`;
+
+async function ensureTableExists(checkTableExistsQuery, createTableQuery,alterTableQuery, tableName) {
   const client = await pool.connect();
   try {
     const res = await client.query(checkTableExistsQuery);
@@ -59,6 +72,7 @@ async function ensureTableExists(checkTableExistsQuery, createTableQuery, tableN
       console.log(`${tableName} table has been successfully created!`);
     } else {
       console.log(`${tableName} table already exists.`);
+      await client.query(alterTableQuery)
     }
   } catch (err) {
     console.error(`Error checking/creating ${tableName} table:`, err.stack);
@@ -68,8 +82,8 @@ async function ensureTableExists(checkTableExistsQuery, createTableQuery, tableN
 }
 
 async function ensureAllTables() {
-  await ensureTableExists(checkFoodTableExistsQuery, createFoodTableQuery, 'Food');
-  await ensureTableExists(checkAlertsTableExistsQuery, createAlertsTableQuery, 'Alerts');
+  await ensureTableExists(checkFoodTableExistsQuery, createFoodTableQuery,alterFoodTableQuery, 'Food');
+  await ensureTableExists(checkAlertsTableExistsQuery, createAlertsTableQuery,alterAlertsTableQuery, 'Alerts');
 }
 
 module.exports = ensureAllTables;
