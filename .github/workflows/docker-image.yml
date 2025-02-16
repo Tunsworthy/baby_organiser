@@ -35,4 +35,4 @@ jobs:
           context: ./Frontend
           file: ./Frontend/Dockerfile
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/baby_organiser_frontend:latest
+          tags: ghcr.io/tunsworthy/baby_organiser_frontend:latest
