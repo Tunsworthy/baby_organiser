@@ -81,13 +81,6 @@ jobs:
             echo "POSTGRES_DB=${{ vars.POSTGRES_DB }}" >> .env
         
             docker-compose up -d
-        - name: Ensure Clean Environment
-          run: |
-            cd ~/Docker-Compose/baby_organiser/Baby_Organsier
-            if [ -f .env ]; then
-              rm .env
-              echo "Removed .env file."
-            fi
   verify-containers:
     needs: Deploy
     runs-on: [self-hosted,Production]
@@ -107,7 +100,13 @@ jobs:
           cd ~/Docker-Compose/baby_organiser/Baby_Organsier
           RUNNING_CONTAINERS=$(docker-compose ps --services --filter "status=running"| tr '\n' ' ')
           echo "RUNNING_CONTAINERS=${RUNNING_CONTAINERS}" >> $GITHUB_ENV
-
+      - name: Ensure Clean Environment
+        run: |
+            cd ~/Docker-Compose/baby_organiser/Baby_Organsier
+            if [ -f .env ]; then
+              rm .env
+              echo "Removed .env file."
+            fi
       - name: Verify All Expected Containers Are Running
         run: |
           for container in $EXPECTED_CONTAINERS; do
