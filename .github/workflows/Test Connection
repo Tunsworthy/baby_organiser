@@ -1,0 +1,17 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  Deploy:
+    steps:
+      runs-on: [TestRP]
+      - name: Test Connect
+        run: lscpu
+              
