@@ -92,14 +92,14 @@ jobs:
         id: expected
         run: |
           echo "Getting expected services from docker-compose.yml..."
-          EXPECTED_CONTAINERS=$(docker compose config --services)
+          EXPECTED_CONTAINERS=$(docker-compose config --services)
           echo "EXPECTED_CONTAINERS=${EXPECTED_CONTAINERS}" >> $GITHUB_ENV
 
       - name: List Running Services
         id: running
         run: |
           echo "Getting currently running services..."
-          RUNNING_CONTAINERS=$(docker compose ps --services --filter "status=running")
+          RUNNING_CONTAINERS=$(docker-compose ps --services --filter "status=running")
           echo "RUNNING_CONTAINERS=${RUNNING_CONTAINERS}" >> $GITHUB_ENV
 
       - name: Verify All Expected Containers Are Running
@@ -115,7 +115,7 @@ jobs:
       - name: Check Container Health Status
         run: |
           for container in $RUNNING_CONTAINERS; do
-            CONTAINER_ID=$(docker compose ps -q $container)
+            CONTAINER_ID=$(docker-compose ps -q $container)
             if [ -z "$CONTAINER_ID" ]; then
               echo "⚠️ Could not find container ID for $container. Skipping..."
               continue
