@@ -105,7 +105,7 @@ jobs:
         run: |
           echo "Getting currently running services..."
           cd ~/Docker-Compose/baby_organiser/Baby_Organsier
-          RUNNING_CONTAINERS=$(docker-compose ps --services --filter "status=running")| tr '\n' ' ')
+          RUNNING_CONTAINERS=$(docker-compose ps --services --filter "status=running"| tr '\n' ' ')
           echo "RUNNING_CONTAINERS=${RUNNING_CONTAINERS}" >> $GITHUB_ENV
 
       - name: Verify All Expected Containers Are Running
