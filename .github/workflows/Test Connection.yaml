@@ -13,11 +13,20 @@ jobs:
     runs-on: [self-hosted]
     
     steps:
-      - name: Clone Repo
+      - name: Clone Repo or Update
         run: |
           cd ~/Docker-Compose
-          git clone -n --depth=1 --filter=tree:0 \
-            https://github.com/Tunsworthy/baby_organiser.git
-          cd baby_organiser
+          if [ -d "baby_organiser/.git" ]; then
+            echo "Repository already exists. Pulling latest changes..."
+            cd baby_organiser
+            git pull
+          else
+            echo "Cloning repository..."
+            git clone -n --depth=1 --filter=tree:0 \
+              https://github.com/Tunsworthy/baby_organiser.git
+            cd baby_organiser
+          fi
+      
           git sparse-checkout set --no-cone /Baby_Organsier
           git checkout
+
