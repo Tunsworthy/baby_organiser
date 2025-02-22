@@ -15,7 +15,7 @@ jobs:
     steps:
       - name: Clone Repo
         run: |
-          cd Docker-Compose
+          cd ~\Docker-Compose
           git clone -n --depth=1 --filter=tree:0 \
             https://github.com/Tunsworthy/baby_organiser.git
           cd baby_organiser
