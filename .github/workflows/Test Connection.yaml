@@ -1,4 +1,4 @@
-name: Build and Push Docker Image
+name: Test_Connection_on_Runner
 
 on:
   push:
@@ -10,8 +10,9 @@ on:
 
 jobs:
   Deploy:
+    runs-on: [TestRP]
+    
     steps:
-      runs-on: [TestRP]
       - name: Test Connect
         run: lscpu
               
