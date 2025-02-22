@@ -92,7 +92,13 @@ jobs:
           cd ~/Docker-Compose/baby_organiser/Baby_Organsier
           EXPECTED_CONTAINERS=$(docker-compose config --services| tr '\n' ' ')
           echo "EXPECTED_CONTAINERS=${EXPECTED_CONTAINERS}" >> $GITHUB_ENV
-
+      - name: List Running Services
+        id: running
+        run: |
+          echo "Getting currently running services..."
+          cd ~/Docker-Compose/baby_organiser/Baby_Organsier
+          RUNNING_CONTAINERS=$(docker-compose ps --services --filter "status=running"| tr '\n' ' ')
+          echo "RUNNING_CONTAINERS=${RUNNING_CONTAINERS}" >> $GITHUB_ENV
       - name: Normalize Expected and Running Containers
         run: |
           EXPECTED_CONTAINERS=$(echo "$EXPECTED_CONTAINERS" | tr -s ' ' | tr ' ' '\n')
