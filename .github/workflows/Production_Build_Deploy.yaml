@@ -1,6 +1,4 @@
 name: Build and Push Docker Image
-env:
-  Name: Test
 on:
   push:
     branches:
@@ -73,7 +71,7 @@ jobs:
             [ -f .env ] && rm .env
 
             echo "githubuser=${{ github.actor}}" >> .env
-            echo "MONGO_URI=${{ env.MONGO_URI }}" >> .env
+            echo "MONGO_URI=${{ vars.MONGO_URI }}" >> .env
             echo "POSTGRES_URI=${{ env.POSTGRES_URI }}" >> .env 
             echo "PORT=${{ env.PORT }}" >> .env
             echo "SERVER=${{ env.SERVER }}" >> .env
