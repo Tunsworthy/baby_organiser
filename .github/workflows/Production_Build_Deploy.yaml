@@ -85,13 +85,11 @@ jobs:
     needs: Deploy
     runs-on: [self-hosted,Production]
     steps:
-      - name: Navigate to Deployment Directory
-        run: cd ~/Docker-Compose/baby_organiser/Baby_Organsier
-
       - name: List Expected Services
         id: expected
         run: |
           echo "Getting expected services from docker-compose.yml..."
+          cd ~/Docker-Compose/baby_organiser/Baby_Organsier
           EXPECTED_CONTAINERS=$(docker-compose config --services)
           echo "EXPECTED_CONTAINERS=${EXPECTED_CONTAINERS}" >> $GITHUB_ENV
 
@@ -99,6 +97,7 @@ jobs:
         id: running
         run: |
           echo "Getting currently running services..."
+          cd ~/Docker-Compose/baby_organiser/Baby_Organsier
           RUNNING_CONTAINERS=$(docker-compose ps --services --filter "status=running")
           echo "RUNNING_CONTAINERS=${RUNNING_CONTAINERS}" >> $GITHUB_ENV
 
