@@ -82,12 +82,9 @@ jobs:
         
             docker-compose up -d
   verify-containers:
-    runs-on: ubuntu-latest
-
+    needs: Deploy
+    runs-on: [self-hosted,Production]
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
       - name: Navigate to Deployment Directory
         run: cd ~/Docker-Compose/baby_organiser/Baby_Organsier
 
