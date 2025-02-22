@@ -1,5 +1,6 @@
 name: Build and Push Docker Image
-
+env:
+  Name: Test
 on:
   push:
     branches:
