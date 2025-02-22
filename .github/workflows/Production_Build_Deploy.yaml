@@ -83,6 +83,7 @@ jobs:
             docker-compose up -d
         - name: Ensure Clean Environment
           run: |
+            cd ~/Docker-Compose/baby_organiser/Baby_Organsier
             if [ -f .env ]; then
               rm .env
               echo "Removed .env file."
