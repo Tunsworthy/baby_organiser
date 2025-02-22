@@ -100,13 +100,6 @@ jobs:
           cd ~/Docker-Compose/baby_organiser/Baby_Organsier
           RUNNING_CONTAINERS=$(docker-compose ps --services --filter "status=running"| tr '\n' ' ')
           echo "RUNNING_CONTAINERS=${RUNNING_CONTAINERS}" >> $GITHUB_ENV
-      - name: Ensure Clean Environment
-        run: |
-            cd ~/Docker-Compose/baby_organiser/Baby_Organsier
-            if [ -f .env ]; then
-              rm .env
-              echo "Removed .env file."
-            fi
       - name: Verify All Expected Containers Are Running
         run: |
           for container in $EXPECTED_CONTAINERS; do
@@ -141,4 +134,10 @@ jobs:
       - name: Success Message
         run: echo "✅ All expected containers are running and healthy!"
           - echo "✅ All expected containers are running and healthy!"
-
+      - name: Ensure Clean Environment
+        run: |
+            cd ~/Docker-Compose/baby_organiser/Baby_Organsier
+            if [ -f .env ]; then
+              rm .env
+              echo "Removed .env file."
+            fi
