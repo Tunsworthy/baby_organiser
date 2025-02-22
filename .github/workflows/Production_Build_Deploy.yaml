@@ -120,6 +120,7 @@ jobs:
 
       - name: Check Container Health Status
         run: |
+          cd ~/Docker-Compose/baby_organiser/Baby_Organsier
           for container in $RUNNING_CONTAINERS; do
             CONTAINER_ID=$(docker-compose ps -q $container)
             if [ -z "$CONTAINER_ID" ]; then
