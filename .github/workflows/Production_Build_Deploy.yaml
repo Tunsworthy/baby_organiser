@@ -73,12 +73,12 @@ jobs:
 
             echo "githubuser=${{ github.actor}}" >> .env
             echo "MONGO_URI=${{ vars.MONGO_URI }}" >> .env
-            echo "POSTGRES_URI=${{ env.POSTGRES_URI }}" >> .env 
-            echo "PORT=${{ env.PORT }}" >> .env
-            echo "SERVER=${{ env.SERVER }}" >> .env
-            echo "BABY_NGINX_IP=${{env.BABY_NGINX_IP }}" >> .env
+            echo "POSTGRES_URI=${{ vars.POSTGRES_URI }}" >> .env 
+            echo "PORT=${{ vars.PORT }}" >> .env
+            echo "SERVER=${{ vars.SERVER }}" >> .env
+            echo "BABY_NGINX_IP=${{vars.BABY_NGINX_IP }}" >> .env
             echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
-            echo "POSTGRES_DB=${{ env.POSTGRES_DB }}" >> .env
+            echo "POSTGRES_DB=${{ vars.POSTGRES_DB }}" >> .env
         
             docker-compose up -d
   Verify-containers:
