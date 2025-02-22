@@ -97,7 +97,7 @@ jobs:
         run: |
           echo "Getting expected services from docker-compose.yml..."
           cd ~/Docker-Compose/baby_organiser/Baby_Organsier
-          EXPECTED_CONTAINERS=$(docker-compose config --services)
+          EXPECTED_CONTAINERS=$(docker-compose config --services| tr '\n' ' ')
           echo "EXPECTED_CONTAINERS=${EXPECTED_CONTAINERS}" >> $GITHUB_ENV
 
       - name: List Running Services
@@ -105,7 +105,7 @@ jobs:
         run: |
           echo "Getting currently running services..."
           cd ~/Docker-Compose/baby_organiser/Baby_Organsier
-          RUNNING_CONTAINERS=$(docker-compose ps --services --filter "status=running")
+          RUNNING_CONTAINERS=$(docker-compose ps --services --filter "status=running")| tr '\n' ' ')
           echo "RUNNING_CONTAINERS=${RUNNING_CONTAINERS}" >> $GITHUB_ENV
 
       - name: Verify All Expected Containers Are Running
