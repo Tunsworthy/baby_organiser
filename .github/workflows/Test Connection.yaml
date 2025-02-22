@@ -10,7 +10,7 @@ on:
 
 jobs:
   Deploy:
-    runs-on: [TestRP]
+    runs-on: [self-hosted]
     
     steps:
       - name: Test Connect
