@@ -81,6 +81,12 @@ jobs:
             echo "POSTGRES_DB=${{ vars.POSTGRES_DB }}" >> .env
         
             docker-compose up -d
+        - name: Ensure Clean Environment
+          run: |
+            if [ -f .env ]; then
+              rm .env
+              echo "Removed .env file."
+            fi
   verify-containers:
     needs: Deploy
     runs-on: [self-hosted,Production]
