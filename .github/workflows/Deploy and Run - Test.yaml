@@ -31,7 +31,7 @@ jobs:
           git checkout
       - name: Start Services with Docker Compose
         run: |
-          cd ~/Docker-Compose/baby_organiser
+          cd ~/Docker-Compose/baby_organiser/Baby_Organsier
           echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> .env
           echo "POSTGRES_URI=${{ secrets.POSTGRES_URI }}" >> .env
           echo "PORT=${{ secrets.PORT }}" >> .env
