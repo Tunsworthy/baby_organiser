@@ -1,4 +1,4 @@
-name: Test_Connection_on_Runner
+name: Deploy and Run on Test Server
 
 on:
   push:
@@ -29,4 +29,16 @@ jobs:
       
           git sparse-checkout set --no-cone /Baby_Organsier
           git checkout
+      - name: Start Services with Docker Compose
+        run: |
+          cd ~/Docker-Compose/baby_organiser
+          echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> .env
+          echo "POSTGRES_URI=${{ secrets.POSTGRES_URI }}" >> .env
+          echo "PORT=${{ secrets.PORT }}" >> .env
+          echo "SERVER=${{ secrets.SERVER }}" >> .env
+          echo "BABY_NGINX_IP=${{ secrets.BABY_NGINX_IP }}" >> .env
+          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
+          echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
+      
+          docker-compose up -d
 
