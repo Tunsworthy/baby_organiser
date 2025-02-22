@@ -8,7 +8,7 @@ volumes:
 
 services:
   backendapi:
-    image: baby_organiser_backend_api
+    image:  ghcr.io/tunsworthy/baby_organiser_backend_api:latest
     env_file:
       - .env
     depends_on:
@@ -18,7 +18,7 @@ services:
       baby_org_net: null
 
   frontend:
-    image: baby_organiser_frontend
+    image: ghcr.io/tunsworthy/baby_organiser_frontend:latest
     environment:
       - TZ="Australia/Sydney"
     env_file:
