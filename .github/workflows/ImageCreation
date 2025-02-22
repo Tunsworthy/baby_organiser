@@ -29,10 +29,18 @@ jobs:
           username: ${{ github.actor}}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push Docker image
+      - name: Build and push Frontend Docker image
         uses: docker/build-push-action@v5
         with:
           context: ./Frontend
           file: ./Frontend/Dockerfile
           push: true
           tags: ghcr.io/tunsworthy/baby_organiser_frontend:latest
+     
+      - name: Build and push Backedn Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./Backend_API
+          file: ./Backend_API/Dockerfile
+          push: true
+          tags: ghcr.io/tunsworthy/baby_organiser_backend_api:latest     
