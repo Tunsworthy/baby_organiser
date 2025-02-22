@@ -80,3 +80,41 @@ jobs:
             echo "POSTGRES_DB=${{ env.POSTGRES_DB }}" >> .env
         
             docker-compose up -d
+  Verify-containers:
+    needs: [build-and-push,Deploy]
+    runs-on: [self-hosted,Production]
+    steps:
+    - name: Check Continers
+      run: |
+        - echo "Checking running containers from the current Docker Compose file..."
+        # Navigate to the directory with your docker-compose.yml
+        - cd ~/Docker-Compose/baby_organiser/Baby_Organsier  
+        # Get a list of expected services from docker-compose.yml
+        - EXPECTED_CONTAINERS=$(docker-compose config --services)
+        # Get a list of currently running services
+        - RUNNING_CONTAINERS=$(docker-compose ps --services --filter "status=running")
+        # Fail if any expected container is missing
+        - |
+          for container in $EXPECTED_CONTAINERS; do
+            if ! echo "$RUNNING_CONTAINERS" | grep -q "^$container$"; then
+              echo "❌ Expected container $container is NOT running!"
+              exit 1
+            fi
+          done
+    
+        # Check health status of each running container
+        - |
+          for container in $RUNNING_CONTAINERS; do
+            HEALTH_STATUS=$(docker inspect --format='{{.State.Health.Status}}' "$(docker compose ps -q $container)" 2>/dev/null || echo "no-healthcheck")
+            if [ "$HEALTH_STATUS" = "unhealthy" ]; then
+              echo "❌ Container $container is unhealthy!"
+              exit 1
+            elif [ "$HEALTH_STATUS" = "no-healthcheck" ]; then
+              echo "⚠️ Container $container does not have a health check. Skipping..."
+            else
+              echo "✅ Container $container is healthy."
+            fi
+          done
+    
+        - echo "✅ All expected containers are running and healthy!"
+
