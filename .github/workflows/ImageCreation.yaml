@@ -36,6 +36,7 @@ jobs:
           file: ./Frontend/Dockerfile
           push: true
           tags: ghcr.io/tunsworthy/baby_organiser_frontend:latest
+          platforms: linux/arm64/v8
      
       - name: Build and push Backedn Docker image
         uses: docker/build-push-action@v5
@@ -43,4 +44,5 @@ jobs:
           context: ./Backend_API
           file: ./Backend_API/Dockerfile
           push: true
-          tags: ghcr.io/tunsworthy/baby_organiser_backend_api:latest     
+          tags: ghcr.io/tunsworthy/baby_organiser_backend_api:latest
+          platforms: linux/arm64/v8
