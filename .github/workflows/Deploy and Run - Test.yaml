@@ -10,7 +10,7 @@ on:
 
 jobs:
   Deploy:
-    runs-on: [self-hosted]
+    runs-on: [self-hosted,Production]
     
     steps:
       - name: Clone Repo or Update
