@@ -134,10 +134,10 @@ async function generateAndPostMenus() {
     try {
     const inventory = await fetchInventory();
     const rules = { // Define your rules for Lunch and Dinner.
-      Generation: "Provide 4 days of menus without breaking the rules from the current date",
+      Generation: "Provide 5 days of menus without breaking the rules after the current date",
       //Inventory: "The inventory is provided in the format <Item> - <QTY> - <ID> - <TYPE> each line represents a single item",
       Lunch: "Total QTY 6, minimum 2 protein items and 4 vegtables the same item can be allocated a maximum of 2 times",
-      Dinner: "Total of QTY of 5 made up of protein QTY: 2 Vegetables QTY: 3, one item can be allocated 2 times, all others can only be allocated once",
+      Dinner: "Total of QTY of 4 made up of protein QTY: 2 Vegetables QTY: 2 the same item can be allocated a maximum of 2 times",
       //Fruit: "Fruit should not be allocated to Lunch or Dinner",
       Fish: "Salmon or sardine allocated once per menu generation",
       //typeselection: "Items with type fish can only be served once per generation",
