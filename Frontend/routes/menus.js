@@ -71,8 +71,15 @@ const router = express.Router();
     const newid = parseInt(itemjson.id);
     const newname = itemjson.name;
     const mealdate = req.body.MDate.split('T')[0];
-    if (isNaN(Date.parse(mealdate))) {
+    const parsedDate = Date.parse(mealdate);
+    if (isNaN(parsedDate)) {
       return res.status(400).send('Invalid date format');
+    }
+    const currentDate = new Date();
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(currentDate.getFullYear() - 1);
+    if (parsedDate < oneYearAgo || parsedDate > currentDate) {
+      return res.status(400).send('Date out of range');
     }
     const mealtype = req.body.MType; 
     const mealurl = `${process.env.SERVER}/api/menus/bydate/${mealdate}`;
