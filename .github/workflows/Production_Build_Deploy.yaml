@@ -12,51 +12,11 @@ jobs:
     permissions:
       contents: read
       packages: write
-    strategy:
-        matrix:
-          service: [Frontend, Backend_API]
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
-<<<<<<< HEAD
-      - name: Check if ${{ matrix.service }} was modified
-=======
-      - name: Get changed files
->>>>>>> 2c2f755c57a3bce22b2ab28c7ac63e54eea58689
-        id: check_changes
-        run: |
-          # Ensure we have full commit history
-          git fetch --prune --unshallow || true
-
-          # Determine the previous commit (fallback to main branch if necessary)
-          PREV_COMMIT=${{ github.event.before }}
-          if [ -z "$PREV_COMMIT" ] || ! git rev-parse "$PREV_COMMIT" >/dev/null 2>&1; then
-            PREV_COMMIT="origin/main"
-          fi
-
-          # Get changed files
-          CHANGED_FILES=$(git diff --name-only "$PREV_COMMIT" ${{ github.sha }})
-          echo "Changed files: $CHANGED_FILES"
-
-          # Check for changes inside the 'Frontend' folder
-          if echo "$CHANGED_FILES" | grep -qE '^Frontend/'; then
-            echo "FRONTEND_CHANGED=true" >> $GITHUB_ENV
-          fi
-
-<<<<<<< HEAD
-=======
-          # Check for changes inside the 'Backend_API' folder
-          if echo "$CHANGED_FILES" | grep -qE '^Backend_API/'; then
-            echo "BACKEND_CHANGED=true" >> $GITHUB_ENV
-          fi
-
-      - name: Debug changed files
-        run: |
-          echo "FRONTEND_CHANGED=${{ env.FRONTEND_CHANGED }}"
-          echo "BACKEND_CHANGED=${{ env.BACKEND_CHANGED }}"
-          
->>>>>>> 2c2f755c57a3bce22b2ab28c7ac63e54eea58689
+    
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
