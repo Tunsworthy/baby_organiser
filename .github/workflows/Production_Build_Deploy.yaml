@@ -77,12 +77,7 @@ jobs:
         
             git sparse-checkout set --no-cone /Baby_Organsier
             git checkout
-        - name: Pull latest images
-          run: |
-            cd ~/Docker-Compose/baby_organiser/Baby_Organsier
-            docker-compose pull
-
-        - name: Start Services with Docker Compose
+        - name : Setup env file
           run: |
             cd ~/Docker-Compose/baby_organiser/Baby_Organsier
             # Check if .env exists and remove it
@@ -99,7 +94,16 @@ jobs:
             echo "EMAIL=${{ vars.EMAIL }}" >> .env
             echo "DOMAIN=${{ vars.DOMAIN }}" >> .env
         
+        - name: Pull latest images
+          run: |
+            cd ~/Docker-Compose/baby_organiser/Baby_Organsier
+            docker-compose pull
+
+        - name: Start Services with Docker Compose
+          run: |
+            cd ~/Docker-Compose/baby_organiser/Baby_Organsier
             docker-compose up -d
+            
   verify-containers:
     needs: Deploy
     runs-on: [self-hosted,Production]
