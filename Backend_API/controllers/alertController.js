@@ -1,6 +1,6 @@
 // /controllers/alertController.js
 
-//const { Pool } = require('pg');
+const he = require('he');
 const db = require('../config/postgresConnection'); // Update with path to your database connection setup
 
 // Get all alerts
@@ -9,8 +9,10 @@ exports.getAllAlerts = async (req, res) => {
         const result = await db.query('SELECT * FROM alerts');
         res.json(result.rows);
     } catch (error) {
+
         const he = require('he');
         res.status(500).send(he.encode(error.message));
+
     }
 };
 
@@ -26,6 +28,7 @@ exports.getAlertById = async (req, res) => {
 
         res.json(result.rows[0]);
     } catch (error) {
+
         const he = require('he');
         res.status(500).send(he.encode(error.message));
     }
@@ -37,8 +40,10 @@ exports.getActiveAlerts = async (req, res) => {
         const result = await db.query("SELECT * FROM alerts WHERE status = 'active'");
         res.json(result.rows);
     } catch (error) {
+
         const he = require('he');
         res.status(500).send(he.encode(error.message));
+
     }
 };
 
@@ -52,8 +57,10 @@ exports.createAlert = async (req, res) => {
         );
         res.status(201).json(result.rows[0]);
     } catch (error) {
+
         const he = require('he');
         res.status(500).send(he.encode(error.message));
+
     }
 };
 
@@ -75,5 +82,6 @@ exports.updateAlertById = async (req, res) => {
     } catch (error) {
         const he = require('he');
         res.status(500).send(he.encode(error.message));
+
     }
 };

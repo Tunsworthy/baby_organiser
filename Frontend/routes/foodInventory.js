@@ -1,5 +1,6 @@
 const express = require('express');
 const axios = require('axios');
+const he = require('he');
 require('dotenv').config();
 
 const router = express.Router();
@@ -54,7 +55,7 @@ router.patch('/api/items/:id', async function(req, res, next) {
     console.error("Error updating item:", error);
     // Respond with HTTP status code 500 (server error)
     // and send the error message
-    res.status(500).send(error.message);
+    res.status(500).send(he.encode(error.message));
   }
 });
 
