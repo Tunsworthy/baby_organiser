@@ -31,7 +31,7 @@ services:
       baby_org_net: null
   postgres:
     container_name: postgres_babyorg
-    image: postgres:latest
+    image: postgres:14.17
     env_file:
       - .env
     networks:
