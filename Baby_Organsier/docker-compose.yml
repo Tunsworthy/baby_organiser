@@ -30,7 +30,7 @@ services:
     networks:
       baby_org_net: null
   postgres:
-    container_name: postgres
+    container_name: postgres_babyorg
     image: postgres:latest
     env_file:
       - .env
