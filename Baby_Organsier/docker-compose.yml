@@ -8,7 +8,7 @@ volumes:
 
 services:
   backendapi:
-    container_name: backendapi
+    container_name: backendapi_babyorg
     image:  ghcr.io/tunsworthy/baby_organiser_backend_api:latest
     env_file:
       - .env
@@ -19,7 +19,7 @@ services:
       baby_org_net: null
 
   frontend:
-    container_name: frontend
+    container_name: frontend_babyorg
     image: ghcr.io/tunsworthy/baby_organiser_frontend:latest
     environment:
       - TZ="Australia/Sydney"
@@ -40,7 +40,7 @@ services:
       - postgres_data:/var/lib/postgresql
       - postgres_data_pgdata:/var/lib/postgresql/data
   mongodb:
-    container_name: mongodb
+    container_name: mongodb_babyorg
     image: mongodb-raspberrypi4-unofficial-r7.0.4
     env_file:
       - .env
