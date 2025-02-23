@@ -71,6 +71,10 @@ const router = express.Router();
     const newid = parseInt(itemjson.id);
     const newname = itemjson.name;
     const mealdate = req.body.MDate.split('T')[0];
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(mealdate)) {
+      return res.status(400).send('Invalid date format');
+    }
     const parsedDate = Date.parse(mealdate);
     if (isNaN(parsedDate)) {
       return res.status(400).send('Invalid date format');

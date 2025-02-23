@@ -18,7 +18,8 @@
     "fs": "^0.0.1-security",
     "mongoose": "^8.0.3",
     "pg": "^8.11.3",
-    "express-rate-limit": "^7.5.0"
+    "express-rate-limit": "^7.5.0",
+    "he": "^1.2.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"
