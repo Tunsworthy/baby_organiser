@@ -47,7 +47,7 @@ jobs:
           tags: ghcr.io/tunsworthy/baby_organiser_frontend:latest
           platforms: linux/arm64/v8
      
-      - name: Build and push Backedn Docker image
+      - name: Build and push Backend Docker image
         if: steps.filter.outputs.BackEnd == 'true'
         uses: docker/build-push-action@v5
         with:
