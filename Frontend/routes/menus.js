@@ -1,4 +1,5 @@
 const express = require('express');
+const { parseISO, isValid } = require('date-fns');
 const axios = require('axios');
 const { parse } = require('dotenv');
 require('dotenv').config();
@@ -70,6 +71,9 @@ const router = express.Router();
     const newid = parseInt(itemjson.id);
     const newname = itemjson.name;
     const mealdate = req.body.MDate.split('T')[0];
+    if (isNaN(Date.parse(mealdate))) {
+      return res.status(400).send('Invalid date format');
+    }
     const mealtype = req.body.MType; 
     const mealurl = `${process.env.SERVER}/api/menus/bydate/${mealdate}`;
 
