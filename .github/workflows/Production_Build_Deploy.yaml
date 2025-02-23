@@ -12,11 +12,12 @@ jobs:
     permissions:
       contents: read
       packages: write
-
+    outputs:
+      output1: ${{ steps.filter.outputs.workflows }}
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
-    
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -26,8 +27,18 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor}}
           password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            FrontEnd:
+              - 'Frontend/**'
+            BackEnd:
+              - 'Backend_API/**' 
 
       - name: Build and push Frontend Docker image
+        if: steps.filter.outputs.workflows == 'true'
         uses: docker/build-push-action@v5
         with:
           context: ./Frontend
@@ -37,6 +48,7 @@ jobs:
           platforms: linux/arm64/v8
      
       - name: Build and push Backedn Docker image
+        if: steps.filter.outputs.workflows == 'true'
         uses: docker/build-push-action@v5
         with:
           context: ./Backend_API
