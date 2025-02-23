@@ -19,7 +19,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       
-        - name: Check if ${{ matrix.service }} was modified
+      - name: Check if ${{ matrix.service }} was modified
         id: check_changes
         run: |
           CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
