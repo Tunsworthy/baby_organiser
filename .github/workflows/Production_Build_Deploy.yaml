@@ -105,6 +105,11 @@ jobs:
           echo "Getting expected services from docker-compose.yml..."
           cd ~/Docker-Compose/baby_organiser/Baby_Organsier
           EXPECTED_CONTAINERS=$(docker-compose config --services| tr '\n' ' ')
+          # Exclude certain containers (certbot in this case)
+          EXCLUDED_CONTAINERS="certbot"
+          for exclude in $EXCLUDED_CONTAINERS; do
+            EXPECTED_CONTAINERS=$(echo "$EXPECTED_CONTAINERS" | sed "s/\b$exclude\b//g")
+          done
           echo "EXPECTED_CONTAINERS=${EXPECTED_CONTAINERS}" >> $GITHUB_ENV
       - name: List Running Services
         id: running
