@@ -12,11 +12,21 @@ jobs:
     permissions:
       contents: read
       packages: write
-
+    strategy:
+        matrix:
+          service: [Frontend, Backend_API]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
+      
+        - name: Check if ${{ matrix.service }} was modified
+        id: check_changes
+        run: |
+          CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
+          if echo "$CHANGED_FILES" | grep -qE "^${{ matrix.service }}/"; then
+            echo "CHANGED=true" >> $GITHUB_ENV
+          fi
+          
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
