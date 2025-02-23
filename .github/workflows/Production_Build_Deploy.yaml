@@ -130,11 +130,6 @@ jobs:
             cd ~/Docker-Compose/baby_organiser/Baby_Organsier
             docker-compose up -d
         
-        - name : Clean Up images
-          run: |
-            cd ~/Docker-Compose/baby_organiser/Baby_Organsier
-            docker-compose prune frontend backendapi
-
   verify-containers:
     needs: Deploy
     runs-on: [self-hosted,Production]
