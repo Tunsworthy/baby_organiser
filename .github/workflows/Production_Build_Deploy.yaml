@@ -76,7 +76,7 @@ jobs:
             echo "POSTGRES_URI=${{ vars.POSTGRES_URI }}" >> .env 
             echo "PORT=${{ vars.PORT }}" >> .env
             echo "SERVER=${{ vars.SERVER }}" >> .env
-            echo "BABY_NGINX_IP=${{vars.BABY_NGINX_IP }}" >> .env
+            echo "NGINX_IP=${{vars.BABY_NGINX_IP }}" >> .env
             echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
             echo "POSTGRES_DB=${{ vars.POSTGRES_DB }}" >> .env
             echo "EMAIL=${{ vars.EMAIL }}" >> .env
