@@ -19,12 +19,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       
-      - name: Check if ${{ matrix.service }} was modified
+      - name: Get changed files
         id: check_changes
         run: |
           CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
-          if echo "$CHANGED_FILES" | grep -qE "^${{ matrix.service }}/"; then
-            echo "CHANGED=true" >> $GITHUB_ENV
+          echo "Changed files: $CHANGED_FILES"
+
+          # Check for changes inside the 'Frontend' folder
+          if echo "$CHANGED_FILES" | grep -qE '^Frontend/.*'; then
+            echo "FRONTEND_CHANGED=true" >> $GITHUB_ENV
+          fi
+
+          # Check for changes inside the 'Backend_API' folder
+          if echo "$CHANGED_FILES" | grep -qE '^Backend_API/.*'; then
+            echo "BACKEND_CHANGED=true" >> $GITHUB_ENV
           fi
           
       - name: Set up Docker Buildx
