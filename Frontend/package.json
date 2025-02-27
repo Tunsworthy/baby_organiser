@@ -13,7 +13,7 @@
     "dot-env": "^0.0.1",
     "dotenv": "^16.3.1",
     "express": "~4.21.2",
-    "http-errors": "~1.6.3",
+    "http-errors": "~2.0.0",
     "morgan": "~1.10.0",
     "nodemon": "^3.0.2",
     "pug": "3.0.3",
