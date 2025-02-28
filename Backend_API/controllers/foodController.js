@@ -112,7 +112,8 @@ exports.deleteItem = (req, res) => {
         if (error) {
             return res.status(400).json({ error });
         }
-        res.status(200).send(`Item deleted with ID: ${id}`);
+        const escape = require('escape-html');
+        res.status(200).send(`Item deleted with ID: ${escape(id)}`);
     });
 };
 
