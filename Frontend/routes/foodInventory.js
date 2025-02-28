@@ -1,6 +1,7 @@
 const express = require('express');
 const axios = require('axios');
 const he = require('he');
+const moment = require('moment');
 require('dotenv').config();
 
 const router = express.Router();
@@ -87,6 +88,12 @@ router.post('/api/inventory/:id', async (req, res) => {
   const mealdate = req.body.date;
   const mealtype = req.body.mealType; // "Lunch" or "Dinner"
   console.log(typeof itemId)
+  
+  // Validate mealdate
+  if (!moment(mealdate, 'YYYY-MM-DD', true).isValid()) {
+      return res.status(400).json({ message: 'Invalid date format' });
+  }
+  
   const mealurl = `${process.env.SERVER}/api/menus/bydate/${mealdate}`;
   const apiUrl = `${process.env.SERVER}/api/items/${itemId}`;
   const currentDate = new Date().toISOString();
