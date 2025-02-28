@@ -76,7 +76,7 @@ router.delete('/api/items/:id', async function(req, res, next) {
     console.error("Error deleting item:", error);
     // Respond with HTTP status code 500 (server error)
     // and send the error message
-    res.status(500).send(error.message);
+    res.status(500).send(he.encode(error.message));
   }
 });
 
