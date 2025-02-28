@@ -12,7 +12,9 @@ const router = express.Router();
       // Determine the requested date
       const currentDate = new Date().toISOString().split('T')[0]; // Get the current date
       const requestedDate = req.query.date || currentDate; // Use the current date if not specified in query
-
+      if (!isValid(parseISO(requestedDate))) {
+        return res.status(400).send('Invalid date format');
+      }
       const requestedDateObject = new Date(requestedDate);
       let previousDate = new Date(requestedDate);
       let nextDate =  new Date(requestedDate);
