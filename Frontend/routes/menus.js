@@ -16,6 +16,11 @@ const router = express.Router();
         return res.status(400).send('Invalid date format');
       }
       const requestedDateObject = new Date(requestedDate);
+      const minDate = new Date('2000-01-01'); // Example minimum date
+      const maxDate = new Date('2100-12-31'); // Example maximum date
+      if (requestedDateObject < minDate || requestedDateObject > maxDate) {
+        return res.status(400).send('Date out of range');
+      }
       let previousDate = new Date(requestedDate);
       let nextDate =  new Date(requestedDate);
       // Calculate the previous day
