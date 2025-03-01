@@ -1,4 +1,5 @@
 const db = require('../config/postgresConnection'); // Update with path to your database connection setup
+const escapeHtml = require('escape-html');
 
 exports.getAllItems = async (req, res) => {
     try {
@@ -50,7 +51,7 @@ exports.createItem = (req, res) => {
         if (error) {
             return res.status(400).json({ error });
         }
-        res.status(201).send(`Item added with NAME: ${name}`);
+        res.status(201).send(`Item added with NAME: ${escapeHtml(name)}`);
     });
 };
 
