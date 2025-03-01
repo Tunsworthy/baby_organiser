@@ -67,6 +67,11 @@ router.patch('/api/items/:id', async function(req, res, next) {
 
 router.delete('/api/items/:id', async function(req, res, next) {
   const itemId = req.params.id;
+  // Validate the itemId to ensure it is in the expected format
+  const isValidId = /^[a-fA-F0-9]{24}$/.test(itemId); // Example validation for a MongoDB ObjectId
+  if (!isValidId) {
+    return res.status(400).send("Invalid item ID");
+  }
   try {
     // Construct the API URL with the item ID obtained from the request params
     const apiUrl = `${process.env.SERVER}/api/items/${itemId}`;
