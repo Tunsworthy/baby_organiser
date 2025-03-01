@@ -1,4 +1,5 @@
 const Menu = require('../models/menu'); // Replace with the actual path to the menu model
+const sanitize = require('mongoose-sanitize');
 
 exports.getAllMenus = async (req, res) => {
     try {
@@ -65,9 +66,10 @@ exports.getMenuByDate = async (req, res) => {
 
 exports.updateMenu = async (req, res) => {
     try {
+        const sanitizedBody = sanitize(req.body);
         const updatedMenu = await Menu.findByIdAndUpdate(
             req.params.id,
-            req.body,
+            sanitizedBody,
             { new: true }
         );
         if (!updatedMenu) {
