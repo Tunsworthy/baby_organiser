@@ -98,7 +98,7 @@ exports.updateItem = (req, res) => {
         if (error) {
             return res.status(400).json({ error });
         }
-        res.status(200).send(`Item updated with ID: ${id}`);
+        res.status(200).send(`Item updated with ID: ${escapeHtml(id)}`);
     });
 };
 
