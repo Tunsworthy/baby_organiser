@@ -93,8 +93,8 @@ exports.updateItem = (req, res) => {
     queryValues.push(id);
 
     // Construct the SQL query with the fields to be updated
-    const query = `UPDATE food SET ${querySetParts.join(', ')} WHERE id = $${queryValues.length + 1}`;
-    db.query(query, [...queryValues, id], (error, results) => {
+    const query = `UPDATE food SET ${querySetParts.join(', ')} WHERE id = $${queryValues.length}`;
+    db.query(query, queryValues, (error, results) => {
         if (error) {
             return res.status(400).json({ error });
         }
