@@ -61,8 +61,7 @@ services:
       - ./certbot/conf/:/etc/nginx/ssl/:ro
     networks:
       baby_org_net:
-      vlan23:
-        ipv4_address: ${NGINX_IP}
+      cloudflare_ext:
     restart: always
   certbot:
     container_name: certbot
@@ -81,13 +80,6 @@ networks:
   baby_org_net:
     name: baby_org_net
     internal: true
-  vlan23:
-    name: vlan23
-    driver: ipvlan
-    driver_opts:
-      parent: vlan23
-      ipvlan_mode: l2
-    ipam:
-      config:
-        - subnet: 10.2.3.0/24
-          gateway: 10.2.3.1
+  cloudflare_ext:
+    name: cloudflare_ext
+    internal: true
