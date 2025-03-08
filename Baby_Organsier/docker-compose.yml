@@ -50,7 +50,7 @@ services:
       - mongodb_data:/data/db
       - mongodb_config:/data/configdb
   nginx:
-    container_name: nginx
+    container_name: nginx_babyorg
     image: nginx:latest
     ports:
       - "80:80"
