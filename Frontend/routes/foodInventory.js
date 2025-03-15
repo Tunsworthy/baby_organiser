@@ -5,9 +5,10 @@ const moment = require('moment');
 require('dotenv').config();
 
 const router = express.Router();
+const { auth, requiresAuth } = require('express-openid-connect');
 
 // GET Food Inventory page.
-router.get('/', async function(req, res, next) {
+router.get('/',requiresAuth(), async function(req, res, next) {
   try {
     // Fetch the list of items from the provided API.
     const apiUrl = process.env.SERVER + '/api/items/';

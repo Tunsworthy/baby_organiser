@@ -21,10 +21,10 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 const config = {
   authRequired: false,
   auth0Logout: true,
-  secret: 'a long, randomly-generated string stored in env',
-  baseURL: 'http://localhost:3001',
-  clientID: 'rRbySYSeHQPiTedrjBGbTKyvABu82LV4',
-  issuerBaseURL: 'https://dev-qwl2rniklk4aqonr.au.auth0.com'
+  secret: process.env.SESSION_SECRET,
+  baseURL: process.env.BASE_URL,
+  clientID: process.env.AUTH0_CLIENT_ID,
+  issuerBaseURL: process.env.AUTH0_ISSUER_BASE_URL
 };
 
 app.use(logger('dev'));
@@ -34,10 +34,10 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(auth(config));
-app.get('/', (req, res) => {
-  res.send(req.oidc.isAuthenticated() ? 'Logged in' : 'Logged out');
-});
-//app.use('/', indexRouter);
+//app.get('/', (req, res) => {
+//  res.send(req.oidc.isAuthenticated() ? 'Logged in' : 'Logged out');
+//});
+app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/foodinventory', foodInventoryRouter);
 app.use('/menus',menusRouter);
