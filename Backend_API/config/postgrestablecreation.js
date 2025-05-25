@@ -1,5 +1,5 @@
 // ensureTables.js
-const pool = require('./postgresConnection'); // Update with path to your database connection setup
+const { pool } = require('./postgresConnection'); // Update with path to your database connection setup
 
 // Check if the "food" table exists
 const checkFoodTableExistsQuery = `

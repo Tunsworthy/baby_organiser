@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const foodController = require('../controllers/feedsync');
+const feedsyncController = require('../controllers/feedsyncController');
 const rateLimit = require('express-rate-limit');
 
 const limiter = rateLimit({
@@ -12,6 +12,6 @@ router.use(limiter);
 
 
 // GET endpoint to retrieve all items
-router.get('/latest', feedsnc.latest);
+router.get('/feed/latest', feedsyncController.latest);
 
 module.exports = router;
