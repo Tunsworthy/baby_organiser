@@ -8,5 +8,13 @@ pool.on('connect', () => {
   console.log('Connected to PostgreSQL');
 });
 
-module.exports = pool;
+const feedsync = new Pool({
+  connectionString: process.env.POSTGRES_FEEDSNYC
+});
+
+feedsync.on('connect', () => {
+  console.log('Connected to feedsync');
+});
+
+module.exports = {pool,feedsync};
 // config/server.js

@@ -7,7 +7,7 @@ const ensurepostgresTablesExists = require('./config/postgrestablecreation'); //
 
 
 const { connectMongoDB } = require('./config/mongoConnection.js');
-const postgresPool = require('./config/postgresConnection.js');
+const {pool , feedsync} = require('./config/postgresConnection.js');
 
 // Now you can make queries using the pool object
 async function query(text, params) {
@@ -15,9 +15,13 @@ async function query(text, params) {
   return res;
 }
 
-// You can also listen for errors on a specific pool instance
-postgresPool.on('error', (err, client) => {
-  console.error('Unexpected error on idle client', err); // Log and continue with your application flow
+// Add error handling for both pools
+pool.on('error', (err, client) => {
+  console.error('Unexpected error on idle main pool client', err);
+});
+
+feedsync.on('error', (err, client) => {
+  console.error('Unexpected error on idle feedsync pool client', err);
 });
 
 connectMongoDB(process.env.MONGO_URI).catch((error) => {
