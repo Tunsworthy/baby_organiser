@@ -39,7 +39,7 @@ services:
       - postgres_data_pgdata:/var/lib/postgresql/data
   mongodb:
     container_name: mongodb_babyorg
-    image: mongodb:latest
+    image: mongo:latest
     #image: mongodb-raspberrypi4-unofficial-r7.0.4
     # env_file:
     #   - .env
