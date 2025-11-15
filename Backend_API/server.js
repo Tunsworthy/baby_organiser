@@ -23,12 +23,12 @@ pool.on('error', (err, client) => {
 feedsync.on('error', (err, client) => {
   console.error('Unexpected error on idle feedsync pool client', err);
 });
-
+/*
 connectMongoDB(process.env.MONGO_URI).catch((error) => {
   console.error('MongoDB connection error:', error);
   process.exit(1); // Optionally exit the application if connection completely fails
 });
-
+*/
 const app = express();
 
 // Middleware for parsing JSON and form data
