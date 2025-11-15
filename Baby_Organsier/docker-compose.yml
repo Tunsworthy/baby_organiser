@@ -8,8 +8,8 @@ services:
   backendapi:
     container_name: backendapi_babyorg
     image:  ghcr.io/tunsworthy/baby_organiser_backend_api:latest
-    # env_file:
-    #   - .env
+    env_file:
+       - .env
     depends_on:
       - postgres
       - mongodb
@@ -30,13 +30,12 @@ services:
   postgres:
     container_name: postgres_babyorg
     image: postgres:latest
-    # env_file:
-    #   - .env
+    env_file:
+       - .env.postgres
     networks:
       baby_org_net: null
     volumes:
       - postgres_data:/var/lib/postgresql
-      - postgres_data_pgdata:/var/lib/postgresql/data
   mongodb:
     container_name: mongodb_babyorg
     image: mongo:latest
