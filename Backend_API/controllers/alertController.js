@@ -1,18 +1,13 @@
-// /controllers/alertController.js
-
 const he = require('he');
-const db = require('../config/postgresConnection'); // Update with path to your database connection setup
+const { pool } = require('../config/postgresConnection');
 
 // Get all alerts
 exports.getAllAlerts = async (req, res) => {
     try {
-        const result = await db.query('SELECT * FROM alerts');
+        const result = await pool.query('SELECT * FROM alerts');
         res.json(result.rows);
     } catch (error) {
-
-        const he = require('he');
         res.status(500).send(he.encode(error.message));
-
     }
 };
 
@@ -20,7 +15,7 @@ exports.getAllAlerts = async (req, res) => {
 exports.getAlertById = async (req, res) => {
     try {
         const { id } = req.params;
-        const result = await db.query('SELECT * FROM alerts WHERE id = $1', [id]);
+        const result = await pool.query('SELECT * FROM alerts WHERE id = $1', [id]);
         
         if (result.rows.length === 0) {
             return res.status(404).send('Alert not found');
@@ -28,8 +23,6 @@ exports.getAlertById = async (req, res) => {
 
         res.json(result.rows[0]);
     } catch (error) {
-
-        const he = require('he');
         res.status(500).send(he.encode(error.message));
     }
 };
@@ -37,13 +30,10 @@ exports.getAlertById = async (req, res) => {
 // Get all active alerts
 exports.getActiveAlerts = async (req, res) => {
     try {
-        const result = await db.query("SELECT * FROM alerts WHERE status = 'active'");
+        const result = await pool.query("SELECT * FROM alerts WHERE status = 'active'");
         res.json(result.rows);
     } catch (error) {
-
-        const he = require('he');
         res.status(500).send(he.encode(error.message));
-
     }
 };
 
@@ -51,16 +41,13 @@ exports.getActiveAlerts = async (req, res) => {
 exports.createAlert = async (req, res) => {
     try {
         const { name, type, message, status } = req.body;
-        const result = await db.query(
+        const result = await pool.query(
             'INSERT INTO alerts (name, type, message, status) VALUES ($1, $2, $3, $4) RETURNING *',
             [name, type, message, status]
         );
         res.status(201).json(result.rows[0]);
     } catch (error) {
-
-        const he = require('he');
         res.status(500).send(he.encode(error.message));
-
     }
 };
 
@@ -69,7 +56,7 @@ exports.updateAlertById = async (req, res) => {
     try {
         const { id } = req.params;
         const {status } = req.body;
-        const result = await db.query(
+        const result = await pool.query(
             'UPDATE alerts SET status = $1 WHERE id = $2 RETURNING *',
             [status, id]
         );
@@ -80,8 +67,6 @@ exports.updateAlertById = async (req, res) => {
 
         res.json(result.rows[0]);
     } catch (error) {
-        const he = require('he');
         res.status(500).send(he.encode(error.message));
-
     }
 };

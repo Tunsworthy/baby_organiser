@@ -1,19 +1,12 @@
 require('dotenv').config();
 const express = require('express');
 const fs = require('fs');
+const https = require('https');
+const path = require('path');
 const bodyParser = require('body-parser');
-const mongoose = require('mongoose');
-const ensurepostgresTablesExists = require('./config/postgrestablecreation'); // Adjust the path as needed
+const ensurepostgresTablesExists = require('./config/postgrestablecreation');
 
-
-const { connectMongoDB } = require('./config/mongoConnection.js');
-const {pool , feedsync} = require('./config/postgresConnection.js');
-
-// Now you can make queries using the pool object
-async function query(text, params) {
-  const res = await postgresPool.query(text, params);
-  return res;
-}
+const { pool , feedsync } = require('./config/postgresConnection.js');
 
 // Add error handling for both pools
 pool.on('error', (err, client) => {
@@ -23,12 +16,6 @@ pool.on('error', (err, client) => {
 feedsync.on('error', (err, client) => {
   console.error('Unexpected error on idle feedsync pool client', err);
 });
-/*
-connectMongoDB(process.env.MONGO_URI).catch((error) => {
-  console.error('MongoDB connection error:', error);
-  process.exit(1); // Optionally exit the application if connection completely fails
-});
-*/
 const app = express();
 
 // Middleware for parsing JSON and form data
@@ -60,6 +47,28 @@ ensurepostgresTablesExists().then(() => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+const HTTPS_PORT = process.env.HTTPS_PORT || PORT;
+const SSL_KEY_PATH = process.env.SSL_KEY_PATH ? path.resolve(process.env.SSL_KEY_PATH) : null;
+const SSL_CERT_PATH = process.env.SSL_CERT_PATH ? path.resolve(process.env.SSL_CERT_PATH) : null;
+const SSL_CA_PATH = process.env.SSL_CA_PATH ? path.resolve(process.env.SSL_CA_PATH) : null;
+
+const hasKey = SSL_KEY_PATH && fs.existsSync(SSL_KEY_PATH);
+const hasCert = SSL_CERT_PATH && fs.existsSync(SSL_CERT_PATH);
+const hasCa = SSL_CA_PATH && fs.existsSync(SSL_CA_PATH);
+
+if (hasKey && hasCert) {
+  const options = {
+    key: fs.readFileSync(SSL_KEY_PATH),
+    cert: fs.readFileSync(SSL_CERT_PATH),
+  };
+  if (hasCa) {
+    options.ca = fs.readFileSync(SSL_CA_PATH);
+  }
+  https.createServer(options, app).listen(HTTPS_PORT, () => {
+    console.log(`HTTPS server running on port ${HTTPS_PORT}`);
+  });
+} else {
+  app.listen(PORT, () => console.log(`HTTP server running on port ${PORT}`));
+}
 
 //Comment to rebuild

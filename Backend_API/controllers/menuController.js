@@ -1,32 +1,129 @@
-const Menu = require('../models/menu'); // Replace with the actual path to the menu model
-const sanitize = require('mongoose-sanitize');
+const baseMenuSelect = `
+SELECT
+  m.id,
+  m.date,
+  m.type,
+  COALESCE(
+    json_agg(
+      json_build_object(
+        'id', mi.id,
+        'item_id', mi.item_id,
+        'name', mi.name,
+        'quantity', mi.quantity,
+        'allocated', mi.allocated,
+        'active', mi.active
+      )
+      ORDER BY mi.id
+    ) FILTER (WHERE mi.id IS NOT NULL), '[]'
+  ) AS items
+FROM menus m
+LEFT JOIN menu_items mi ON mi.menu_id = m.id
+`;
+
+function shapeMenuAggregates(row) {
+    const normalizeItems = (arr) => {
+        if (!arr) return [];
+        try {
+            const parsed = Array.isArray(arr) ? arr : JSON.parse(arr);
+            return parsed.map((item) => ({
+                id: item.id,
+                item_id: item.item_id,
+                name: item.name,
+                quantity: item.quantity,
+                allocated: Boolean(item.allocated),
+                active: item.active !== false
+            }));
+        } catch (e) {
+            return [];
+        }
+    };
+
+    return {
+        id: row.id,
+        date: row.date,
+        type: row.type,
+        items: normalizeItems(row.items)
+    };
+}
+
+async function insertMenuItems(client, menuId, items) {
+    if (!items || !Array.isArray(items) || !items.length) return;
+    const values = [];
+    const params = [];
+    let idx = 1;
+
+    items.forEach((item) => {
+        values.push(`($${idx}, $${idx + 1}, $${idx + 2}, $${idx + 3}, $${idx + 4}, $${idx + 5}, $${idx + 6})`);
+        params.push(menuId);
+        params.push(item.item_id ?? null);
+        params.push(item.name ?? null);
+        params.push(item.quantity ?? null);
+        params.push(item.allocated ?? false);
+        params.push(item.active ?? true);
+        params.push(item.created_at ?? null);
+        idx += 7;
+    });
+
+    await client.query(
+        `INSERT INTO menu_items (menu_id, item_id, name, quantity, allocated, active, created_at)
+         VALUES ${values.join(', ')}`,
+        params
+    );
+}
 
 exports.getAllMenus = async (req, res) => {
     try {
-        const menus = await Menu.find({});
-        res.status(200).json(menus);
+        const { rows } = await pool.query(
+            `${baseMenuSelect} GROUP BY m.id, m.date, m.type ORDER BY m.date DESC, m.type`
+        );
+        res.status(200).json(rows.map(shapeMenuAggregates));
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
 };
 
 exports.createMenu = async (req, res) => {
+    const client = await pool.connect();
     try {
-        const newMenu = new Menu(req.body);
-        const savedMenu = await newMenu.save();
-        res.status(201).json(savedMenu);
+        const dateStr = toDateOnly(req.body?.date);
+        const type = req.body?.type;
+        if (!dateStr) return res.status(400).json({ error: 'Invalid or missing date' });
+        if (!type || !['Breakfast','Lunch','Dinner'].includes(type)) {
+            return res.status(400).json({ error: 'Invalid or missing type (Breakfast, Lunch, Dinner)' });
+        }
+
+        await client.query('BEGIN');
+        const { rows: menuRows } = await client.query(
+            'INSERT INTO menus (date, type) VALUES ($1, $2) RETURNING id, date, type',
+            [dateStr, type]
+        );
+        const menuId = menuRows[0].id;
+
+        await insertMenuItems(client, menuId, req.body?.items);
+
+        const { rows } = await client.query(
+            `${baseMenuSelect} WHERE m.id = $1 GROUP BY m.id, m.date, m.type`,
+            [menuId]
+        );
+
+        await client.query('COMMIT');
+        res.status(201).json(shapeMenuAggregates(rows[0]));
     } catch (error) {
+        await client.query('ROLLBACK');
         res.status(400).json({ error: error.message });
+    } finally {
+        client.release();
     }
 };
 
 exports.getMenuById = async (req, res) => {
     try {
-        const menu = await Menu.findById(req.params.id);
-        if (!menu) {
-            return res.status(404).json({ message: 'Menu not found' });
-        }
-        res.status(200).json(menu);
+        const { rows } = await pool.query(
+            `${baseMenuSelect} WHERE m.id = $1 GROUP BY m.id, m.date, m.type`,
+            [req.params.id]
+        );
+        if (!rows.length) return res.status(404).json({ message: 'Menu not found' });
+        res.status(200).json(shapeMenuAggregates(rows[0]));
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
@@ -34,59 +131,67 @@ exports.getMenuById = async (req, res) => {
 
 exports.getMenuByDate = async (req, res) => {
     try {
-        // Assuming req.params.date is in the format 'YYYY-MM-DD'
-        const dateString = req.params.date; 
-        const date = new Date(dateString);
-        
-        // Set time to 00:00:00 for the beginning of the date
-        date.setUTCHours(0, 0, 0, 0);
+        const dateStr = toDateOnly(req.params?.date);
+        if (!dateStr) return res.status(400).json({ error: 'Invalid date format. Expected YYYY-MM-DD' });
 
-        // Create a new date object for the end of the day
-        const nextDay = new Date(date);
-        nextDay.setUTCHours(23, 59, 59, 999);
-
-        // Find menus on the specified date
-        const menus = await Menu.find({
-            date: {
-                $gte: date,
-                $lte: nextDay
-            }
-        });
-
-        if (!menus || menus.length === 0) {
-            return res.status(404).json({ message: 'No menus found for the specified date' });
-        }
-
-        res.status(200).json(menus);
+        const { rows } = await pool.query(
+            `${baseMenuSelect} WHERE m.date = $1 GROUP BY m.id, m.date, m.type`,
+            [dateStr]
+        );
+        if (!rows.length) return res.status(404).json({ message: 'No menus found for the specified date' });
+        res.status(200).json(rows.map(shapeMenuAggregates));
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
 
-
 exports.updateMenu = async (req, res) => {
+    const client = await pool.connect();
     try {
-        const sanitizedBody = sanitize(req.body);
-        const updatedMenu = await Menu.findByIdAndUpdate(
-            req.params.id,
-            sanitizedBody,
-            { new: true }
-        );
-        if (!updatedMenu) {
-            return res.status(404).json({ message: 'Menu not found' });
+        await client.query('BEGIN');
+
+        if (req.body?.date) {
+            const dateStr = toDateOnly(req.body.date);
+            if (!dateStr) {
+                await client.query('ROLLBACK');
+                return res.status(400).json({ error: 'Invalid date' });
+            }
+            await client.query('UPDATE menus SET date = $1 WHERE id = $2', [dateStr, req.params.id]);
         }
-        res.status(200).json(updatedMenu);
+
+        if (req.body?.type) {
+            if (!['Breakfast','Lunch','Dinner'].includes(req.body.type)) {
+                await client.query('ROLLBACK');
+                return res.status(400).json({ error: 'Invalid type' });
+            }
+            await client.query('UPDATE menus SET type = $1 WHERE id = $2', [req.body.type, req.params.id]);
+        }
+
+        if (req.body?.items && Array.isArray(req.body.items)) {
+            await client.query('DELETE FROM menu_items WHERE menu_id = $1', [req.params.id]);
+            await insertMenuItems(client, req.params.id, req.body.items);
+        }
+
+        const { rows } = await client.query(
+            `${baseMenuSelect} WHERE m.id = $1 GROUP BY m.id, m.date, m.type`,
+            [req.params.id]
+        );
+
+        await client.query('COMMIT');
+        if (!rows.length) return res.status(404).json({ message: 'Menu not found' });
+        res.status(200).json(shapeMenuAggregates(rows[0]));
     } catch (error) {
+        await client.query('ROLLBACK');
         res.status(400).json({ error: error.message });
+    } finally {
+        client.release();
     }
 };
 
 exports.deleteMenu = async (req, res) => {
     try {
-        const deletedMenu = await Menu.findByIdAndDelete(req.params.id);
-        if (!deletedMenu) {
-            return res.status(404).json({ message: 'Menu not found' });
-        }
+        const { rowCount } = await pool.query('DELETE FROM menus WHERE id = $1', [req.params.id]);
+        if (!rowCount) return res.status(404).json({ message: 'Menu not found' });
         res.status(200).json({ message: 'Menu deleted successfully' });
     } catch (error) {
         res.status(400).json({ error: error.message });

@@ -61,6 +61,58 @@ const alterAlertsTableQuery = `
 
 `;
 
+// Check if the "menus" table exists
+const checkMenusTableExistsQuery = `
+SELECT EXISTS (
+  SELECT FROM 
+    pg_catalog.pg_tables 
+  WHERE 
+    schemaname != 'pg_catalog' 
+    AND schemaname != 'information_schema'
+    AND tablename  = 'menus'
+);
+`;
+
+// Create the "menus" table (drop and recreate to enforce schema)
+const createMenusTableQuery = `
+DROP TABLE IF EXISTS menu_items;
+DROP TABLE IF EXISTS menus;
+
+CREATE TABLE menus (
+  id SERIAL PRIMARY KEY,
+  date DATE NOT NULL,
+  type VARCHAR(20) NOT NULL CHECK (type IN ('Breakfast','Lunch','Dinner')),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(date, type)
+);
+CREATE INDEX IF NOT EXISTS idx_menus_date_type ON menus(date, type);
+`;
+
+const alterMenusTableQuery = `
+
+`;
+
+// Create the "menu_items" table (drop and recreate to enforce schema)
+const createMenuItemsTableQuery = `
+CREATE TABLE menu_items (
+  id SERIAL PRIMARY KEY,
+  menu_id INTEGER NOT NULL REFERENCES menus(id) ON DELETE CASCADE,
+  item_id INTEGER,
+  name TEXT,
+  quantity INTEGER NOT NULL,
+  allocated BOOLEAN DEFAULT FALSE,
+  active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_menu_items_menu_id ON menu_items(menu_id);
+CREATE INDEX IF NOT EXISTS idx_menu_items_active ON menu_items(active);
+CREATE INDEX IF NOT EXISTS idx_menu_items_item_id ON menu_items(item_id);
+`;
+
+const alterMenuItemsTableQuery = `
+
+`;
+
 async function ensureTableExists(checkTableExistsQuery, createTableQuery,alterTableQuery, tableName) {
   const client = await pool.connect();
   try {
@@ -84,6 +136,8 @@ async function ensureTableExists(checkTableExistsQuery, createTableQuery,alterTa
 async function ensureAllTables() {
   await ensureTableExists(checkFoodTableExistsQuery, createFoodTableQuery,alterFoodTableQuery, 'Food');
   await ensureTableExists(checkAlertsTableExistsQuery, createAlertsTableQuery,alterAlertsTableQuery, 'Alerts');
+  await ensureTableExists(checkMenusTableExistsQuery, createMenusTableQuery,alterMenusTableQuery, 'Menus');
+  await ensureTableExists(checkMenuItemsTableExistsQuery, createMenuItemsTableQuery,alterMenuItemsTableQuery, 'Menu_Items');
 }
 
 module.exports = ensureAllTables;
