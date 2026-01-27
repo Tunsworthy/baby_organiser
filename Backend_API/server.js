@@ -57,16 +57,22 @@ const hasCert = SSL_CERT_PATH && fs.existsSync(SSL_CERT_PATH);
 const hasCa = SSL_CA_PATH && fs.existsSync(SSL_CA_PATH);
 
 if (hasKey && hasCert) {
-  const options = {
-    key: fs.readFileSync(SSL_KEY_PATH),
-    cert: fs.readFileSync(SSL_CERT_PATH),
-  };
-  if (hasCa) {
-    options.ca = fs.readFileSync(SSL_CA_PATH);
+  try {
+    const options = {
+      key: fs.readFileSync(SSL_KEY_PATH),
+      cert: fs.readFileSync(SSL_CERT_PATH),
+    };
+    if (hasCa) {
+      options.ca = fs.readFileSync(SSL_CA_PATH);
+    }
+    https.createServer(options, app).listen(HTTPS_PORT, () => {
+      console.log(`HTTPS server running on port ${HTTPS_PORT}`);
+    });
+  } catch (err) {
+    console.warn(`Failed to load SSL certificates: ${err.message}`);
+    console.log(`Falling back to HTTP server on port ${PORT}`);
+    app.listen(PORT, () => console.log(`HTTP server running on port ${PORT}`));
   }
-  https.createServer(options, app).listen(HTTPS_PORT, () => {
-    console.log(`HTTPS server running on port ${HTTPS_PORT}`);
-  });
 } else {
   app.listen(PORT, () => console.log(`HTTP server running on port ${PORT}`));
 }
