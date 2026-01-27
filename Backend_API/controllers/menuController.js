@@ -1,5 +1,12 @@
 const { pool } = require('../config/postgresConnection');
 
+// Helper to normalize date to YYYY-MM-DD
+function toDateOnly(dateInput) {
+  if (!dateInput) return null;
+  const d = new Date(dateInput);
+  return d.toISOString().split('T')[0];
+}
+
 const baseMenuSelect = `
 SELECT
   m.id,
@@ -73,6 +80,7 @@ async function insertMenuItems(client, menuId, items) {
     );
 }
 
+// Get all menus
 exports.getAllMenus = async (req, res) => {
     try {
         const { rows } = await pool.query(

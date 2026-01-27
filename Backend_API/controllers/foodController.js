@@ -1,13 +1,13 @@
-const db = require('../config/postgresConnection'); // Update with path to your database connection setup
+const { pool } = require('../config/postgresConnection');
 const escapeHtml = require('escape-html');
 
 exports.getAllItems = async (req, res) => {
     try {
         // Assuming 'db' is your database instance and it has a method 'query'
         const sql = 'SELECT * FROM food'; // SQL statement to select everything from 'food' table
-        const items = await db.query(sql); // Execute the query and get the results
+        const items = await pool.query(sql); // Execute the query and get the results
 
-        res.status(200).json(items);
+        res.status(200).json(items.rows);
     } catch (error) {
         console.error(error); // It's a good practice to log the actual error
         res.status(500).json({ message: 'Error fetching items from the food table' });
@@ -24,7 +24,7 @@ exports.getSingleItem = async (req, res) => {
         const sql = 'SELECT * FROM food WHERE id = $1'; // Use $1 for the first parameter
 
         // Execute the query with the correct parameter placeholder
-        const items = await db.query(sql, [itemid]); 
+        const items = await pool.query(sql, [itemid]); 
         console.log(items)
         const item = items.rows.length > 0 ? items.rows[0] : null; // Assuming the query returns an object with a 'rows' array
 
@@ -41,18 +41,18 @@ exports.getSingleItem = async (req, res) => {
 
 
 
-exports.createItem = (req, res) => {
-    console.log(req.body)
-    const { name, quantity, dateprepared, type, lastallocated} = req.body;
-    
-    // Add SQL query to insert a new item into the food inventory table
-    const query = 'INSERT INTO food(name, quantity, dateprepared, type, lastallocated) VALUES($1, $2, $3, $4, $5)';
-    db.query(query, [name, quantity, dateprepared, type, lastallocated], (error, results) => {
-        if (error) {
-            return res.status(400).json({ error });
-        }
-        res.status(201).send(`Item added with NAME: ${escapeHtml(name)}`);
-    });
+exports.createItem = async (req, res) => {
+  try {
+    const { name, quantity, dateprepared, type, lastallocated } = req.body;
+    const result = await pool.query(
+      'INSERT INTO food (name, quantity, dateprepared, type, lastallocated) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [name, quantity, dateprepared, type, lastallocated]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error creating item:', error);
+    res.status(500).json({ error: 'Failed to create item' });
+  }
 };
 
 exports.updateItem = (req, res) => {
@@ -94,7 +94,7 @@ exports.updateItem = (req, res) => {
 
     // Construct the SQL query with the fields to be updated
     const query = `UPDATE food SET ${querySetParts.join(', ')} WHERE id = $${queryValues.length}`;
-    db.query(query, queryValues, (error, results) => {
+    pool.query(query, queryValues, (error, results) => {
         if (error) {
             return res.status(400).json({ error });
         }
@@ -109,7 +109,7 @@ exports.deleteItem = (req, res) => {
 
     // SQL query to delete the item by id
     const query = 'DELETE FROM food WHERE id = $1';
-    db.query(query, [id], (error, results) => {
+    pool.query(query, [id], (error, results) => {
         if (error) {
             return res.status(400).json({ error });
         }
@@ -124,7 +124,7 @@ exports.deleteMultipleItems = (req, res) => {
 
     // SQL query to delete multiple items by their ids
     const query = 'DELETE FROM food WHERE id = ANY($1)';
-    db.query(query, [ids], (error, results) => {
+    pool.query(query, [ids], (error, results) => {
         if (error) {
             return res.status(400).json({ error });
         }
