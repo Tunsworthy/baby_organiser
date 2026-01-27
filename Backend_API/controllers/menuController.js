@@ -1,3 +1,5 @@
+const { pool } = require('../config/postgresConnection');
+
 const baseMenuSelect = `
 SELECT
   m.id,

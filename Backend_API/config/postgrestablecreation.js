@@ -28,10 +28,7 @@ CREATE TABLE IF NOT EXISTS food (
 
 const alterFoodTableQuery = `
 
-ALTER TABLE food
-ADD COLUMN lastallocated DATE;
-
-`;
+`; // no-op: column already created in CREATE TABLE
 
 // Check if the "alerts" table exists
 const checkAlertsTableExistsQuery = `
