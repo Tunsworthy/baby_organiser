@@ -67,6 +67,7 @@ jobs:
           push: true
           tags: ghcr.io/tunsworthy/baby_organiser_frontend_v2:latest
           platforms: linux/amd64,linux/arm64/v8
+          no-cache: true
   # Deploy:
   #     needs: build-and-push
   #     environment: Test
@@ -215,4 +216,3 @@ jobs:
   #             rm .env
   #             echo "Removed .env file."
   #           fi
-#
