@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import apiClient from '../services/apiClient'
 
 export const useAuthStore = create((set) => ({
   user: null,
@@ -14,24 +15,13 @@ export const useAuthStore = create((set) => ({
   login: async (email, password) => {
     set({ isLoading: true, error: null })
     try {
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email, password })
-      })
-
-      if (!response.ok) {
-        throw new Error('Login failed')
-      }
-
-      const data = await response.json()
+      const data = await apiClient.post('/api/auth/login', { email, password })
       set({
-        user: data.user,
-        accessToken: data.accessToken,
+        user: data.data.user,
+        accessToken: data.data.accessToken,
         isLoading: false
       })
-      return data
+      return data.data
     } catch (err) {
       set({ error: err.message, isLoading: false })
       throw err
@@ -41,24 +31,13 @@ export const useAuthStore = create((set) => ({
   register: async (email, password, firstName, lastName) => {
     set({ isLoading: true, error: null })
     try {
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/api/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email, password, firstName, lastName })
-      })
-
-      if (!response.ok) {
-        throw new Error('Registration failed')
-      }
-
-      const data = await response.json()
+      const data = await apiClient.post('/api/auth/register', { email, password, firstName, lastName })
       set({
-        user: data.user,
-        accessToken: data.accessToken,
+        user: data.data.user,
+        accessToken: data.data.accessToken,
         isLoading: false
       })
-      return data
+      return data.data
     } catch (err) {
       set({ error: err.message, isLoading: false })
       throw err

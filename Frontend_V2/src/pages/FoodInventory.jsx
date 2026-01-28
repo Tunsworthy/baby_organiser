@@ -22,13 +22,13 @@ export default function FoodInventory() {
       navigate('/login')
       return
     }
-    fetchItems(accessToken)
+    fetchItems()
   }, [accessToken, fetchItems, navigate])
 
   const handleAddItem = async (itemData) => {
     try {
       setFormError(null)
-      await addItem(itemData, accessToken)
+      await addItem(itemData)
       setShowForm(false)
     } catch (err) {
       setFormError(err.message || 'Failed to add item')
@@ -38,7 +38,7 @@ export default function FoodInventory() {
   const handleUpdateItem = async (itemData) => {
     try {
       setFormError(null)
-      await updateItem(editingItem.id, itemData, accessToken)
+      await updateItem(editingItem.id, itemData)
       setEditingItem(null)
       setShowForm(false)
     } catch (err) {
@@ -50,7 +50,7 @@ export default function FoodInventory() {
     if (window.confirm('Are you sure you want to delete this item?')) {
       try {
         setFormError(null)
-        await deleteItem(itemId, accessToken)
+        await deleteItem(itemId)
       } catch (err) {
         setFormError(err.message || 'Failed to delete item')
       }
