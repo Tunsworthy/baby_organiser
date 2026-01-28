@@ -132,8 +132,8 @@ async function login(req, res) {
 
     const user = userResult.rows[0];
 
-    // Verify password
-    const passwordMatch = await bcrypt.compare(password, user.passwordHash);
+    // Verify password (column names are lowercase from PostgreSQL)
+    const passwordMatch = await bcrypt.compare(password, user.passwordhash);
     if (!passwordMatch) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
