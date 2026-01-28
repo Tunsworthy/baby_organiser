@@ -7,6 +7,16 @@ const bodyParser = require('body-parser');
 const ensurepostgresTablesExists = require('./config/postgrestablecreation');
 
 const { pool , feedsync } = require('./config/postgresConnection.js');
+const { authMiddleware } = require('./middleware/authMiddleware');
+
+// Import route handlers
+const authRoutes = require('./routes/auth');
+const groupRoutes = require('./routes/groups');
+const childRoutes = require('./routes/children');
+const foodRoutes = require('./routes/foodRoutes');
+const menuRoutes = require('./routes/menus');
+const alertRoutes = require('./routes/alerts');
+const feedsyncRoutes = require('./routes/feedsyncRoutes');
 
 // Add error handling for both pools
 pool.on('error', (err, client) => {
@@ -22,22 +32,34 @@ const app = express();
 app.use(bodyParser.urlencoded({ extended: true,limit: '100mb' }));
 app.use(bodyParser.json());
 
-// Automatically load all route files from the routes directory
-const routeFiles = fs.readdirSync('./routes').filter(file => file.endsWith('.js'));
+// Public routes (no auth required)
+app.use('/api/auth', authRoutes);
 
-routeFiles.forEach((file) => {
-  const route = require(`./routes/${file}`);
-  app.use('/api', route);
+// Protected routes (auth required)
+app.use('/api/groups', authMiddleware, groupRoutes);
+app.use('/api/children', authMiddleware, childRoutes);
+app.use('/api/items', authMiddleware, foodRoutes);
+app.use('/api/menus', authMiddleware, menuRoutes);
+app.use('/api/alerts', authMiddleware, alertRoutes);
+app.use('/api/feed', feedsyncRoutes);
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', message: 'Backend API is running' });
 });
-// ... error handling, start server, etc.
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ error: 'Endpoint not found' });
+});
+
+// Error handler
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err);
+  res.status(500).json({ error: 'Internal server error' });
+});
 
 module.exports = app;
-
-// API key middleware
-//app.use(apiKeyMiddleware({ keyHeader: 'x-api-key', key: process.env.API_KEY }));
-
-// Define routes here
-// e.g., app.use('/api/items', itemsRouter);
 
 // Run the function to make sure the "food" table exists
 ensurepostgresTablesExists().then(() => {
