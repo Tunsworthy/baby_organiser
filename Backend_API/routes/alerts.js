@@ -10,10 +10,10 @@ const limiter = rateLimit({
 
 router.use(limiter);
 
-router.get('/alerts', alertController.getAllAlerts);
-router.get('/alerts/active', alertController.getActiveAlerts);
-router.get('/alerts/:id', alertController.getAlertById);
-router.post('/alerts', alertController.createAlert);
-router.patch('/alerts/:id', alertController.updateAlertById);
+router.get('/', alertController.getAllAlerts);
+router.get('/active', alertController.getActiveAlerts);
+router.get('/:id', alertController.getAlertById);
+router.post('/', alertController.createAlert);
+router.patch('/:id', alertController.updateAlertById);
 
 module.exports = router;

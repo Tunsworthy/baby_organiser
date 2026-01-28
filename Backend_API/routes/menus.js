@@ -10,11 +10,11 @@ const limiter = rateLimit({
 
 router.use(limiter);
 
-router.get('/menus', menuController.getAllMenus);
-router.post('/menus', menuController.createMenu);
-router.get('/menus/:id', menuController.getMenuById);
-router.get('/menus/bydate/:date', menuController.getMenuByDate);
-router.put('/menus/:id', menuController.updateMenu);
-router.delete('/menus/:id', menuController.deleteMenu);
+router.get('/', menuController.getAllMenus);
+router.post('/', menuController.createMenu);
+router.get('/:id', menuController.getMenuById);
+router.get('/bydate/:date', menuController.getMenuByDate);
+router.put('/:id', menuController.updateMenu);
+router.delete('/:id', menuController.deleteMenu);
 
 module.exports = router;

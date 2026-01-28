@@ -11,21 +11,21 @@ const limiter = rateLimit({
 router.use(limiter);
 
 // POST endpoint to create a new item
-router.post('/items', foodController.createItem);
+router.post('/', foodController.createItem);
 
 // GET endpoint to retrieve all items
-router.get('/items', foodController.getAllItems);
+router.get('/', foodController.getAllItems);
 
 // GET endpoint to retrieve a single item by name
-router.get('/items/:id', foodController.getSingleItem);
+router.get('/:id', foodController.getSingleItem);
 
-// PUT endpoint to update an existing item by name
-router.patch('/items/:id', foodController.updateItem);
+// PATCH endpoint to update an existing item
+router.patch('/:id', foodController.updateItem);
 
-// DELETE endpoint to delete an item by name
-router.delete('/items/:id', foodController.deleteItem);
+// DELETE endpoint to delete an item
+router.delete('/:id', foodController.deleteItem);
 
 // DELETE endpoint to delete multiple items
-router.delete('/items', foodController.deleteMultipleItems);
+router.delete('/', foodController.deleteMultipleItems);
 
 module.exports = router;
