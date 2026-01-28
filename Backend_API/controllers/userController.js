@@ -80,6 +80,14 @@ async function register(req, res) {
       { expiresIn: '7d' }
     );
 
+    // Set refresh token as httpOnly cookie
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+
     res.status(201).json({
       message: 'User registered successfully',
       user: {
@@ -93,8 +101,7 @@ async function register(req, res) {
         id: group.id,
         name: group.name
       },
-      accessToken,
-      refreshToken
+      accessToken
     });
   } catch (err) {
     await client.query('ROLLBACK');
@@ -157,6 +164,14 @@ async function login(req, res) {
       { expiresIn: '7d' }
     );
 
+    // Set refresh token as httpOnly cookie
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+
     res.json({
       message: 'Login successful',
       user: {
@@ -168,8 +183,7 @@ async function login(req, res) {
       },
       groupId: user.groupid,
       role: user.role,
-      accessToken,
-      refreshToken
+      accessToken
     });
   } catch (err) {
     console.error('Login error:', err);
@@ -178,17 +192,17 @@ async function login(req, res) {
 }
 
 /**
- * Refresh access token using refresh token
+ * Refresh access token using refresh token from cookie
  */
 async function refreshToken(req, res) {
-  const { refreshToken } = req.body;
+  const refreshTokenFromCookie = req.cookies.refreshToken;
 
-  if (!refreshToken) {
+  if (!refreshTokenFromCookie) {
     return res.status(400).json({ error: 'Refresh token is required' });
   }
 
   try {
-    const decoded = jwt.verify(refreshToken, JWT_SECRET);
+    const decoded = jwt.verify(refreshTokenFromCookie, JWT_SECRET);
 
     // Get updated user info
     const userResult = await pool.query(
