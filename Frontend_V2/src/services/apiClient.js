@@ -1,17 +1,8 @@
 import axios from 'axios'
 import { useAuthStore } from '../store/authStore'
 
-// Use runtime config instead of build-time env var
-const BASE_URL = window.APP_CONFIG?.VITE_BACKEND_API_URL || import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:3000'
-
-console.log('🔍 API Client Debug:', {
-  APP_CONFIG: window.APP_CONFIG,
-  VITE_ENV: import.meta.env.VITE_BACKEND_API_URL,
-  BASE_URL: BASE_URL
-})
-
+// Use relative paths - no baseURL needed since user navigates to the domain
 const apiClient = axios.create({
-  baseURL: BASE_URL,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json'
@@ -42,7 +33,7 @@ apiClient.interceptors.response.use(
       try {
         // Attempt to refresh token
         const response = await axios.post(
-          `${BASE_URL}/api/auth/refresh`,
+          '/api/auth/refresh',
           {},
           { withCredentials: true }
         )
