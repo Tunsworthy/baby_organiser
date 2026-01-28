@@ -4,6 +4,12 @@ import { useAuthStore } from '../store/authStore'
 // Use runtime config instead of build-time env var
 const BASE_URL = window.APP_CONFIG?.VITE_BACKEND_API_URL || import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:3000'
 
+console.log('🔍 API Client Debug:', {
+  APP_CONFIG: window.APP_CONFIG,
+  VITE_ENV: import.meta.env.VITE_BACKEND_API_URL,
+  BASE_URL: BASE_URL
+})
+
 const apiClient = axios.create({
   baseURL: BASE_URL,
   withCredentials: true,
