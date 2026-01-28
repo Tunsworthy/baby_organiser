@@ -199,4 +199,4 @@ Common utility classes:
 - Add group/family invitation system
 - Implement alerts and notifications
 - Add data export/backup features
--update
+- update
