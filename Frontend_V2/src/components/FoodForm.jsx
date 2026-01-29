@@ -27,13 +27,13 @@ export default function FoodForm({ onSubmit, isLoading, initialData, onCancel })
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Item Name
+          Name
         </label>
         <input
           {...register('name', { required: 'Name is required' })}
           type="text"
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="e.g., Baby Food - Carrots"
+          placeholder="e.g., Baby Porridge"
         />
         {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
       </div>
@@ -43,11 +43,11 @@ export default function FoodForm({ onSubmit, isLoading, initialData, onCancel })
           Quantity
         </label>
         <input
-          {...register('quantity', { required: 'Quantity is required' })}
+          {...register('quantity', { required: 'Quantity is required', valueAsNumber: true })}
           type="number"
-          step="0.1"
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="e.g., 5"
+          min="0"
         />
         {errors.quantity && <p className="text-red-500 text-sm mt-1">{errors.quantity.message}</p>}
       </div>
@@ -66,19 +66,44 @@ export default function FoodForm({ onSubmit, isLoading, initialData, onCancel })
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Category
+          Last Served
+        </label>
+        <input
+          {...register('lastallocated')}
+          type="date"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Date Prepared
+        </label>
+        <input
+          {...register('dateprepared', { required: 'Date Prepared is required' })}
+          type="date"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        {errors.dateprepared && <p className="text-red-500 text-sm mt-1">{errors.dateprepared.message}</p>}
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Type
         </label>
         <select
-          {...register('category')}
+          {...register('type', { required: 'Type is required' })}
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
-          <option value="">Select category</option>
-          <option value="formula">Formula</option>
-          <option value="baby_food">Baby Food</option>
-          <option value="snacks">Snacks</option>
-          <option value="drinks">Drinks</option>
-          <option value="other">Other</option>
+          <option value="">Select type</option>
+          <option value="protein">Protein</option>
+          <option value="fish">Fish</option>
+          <option value="vegetable">Vegetable</option>
+          <option value="fruit">Fruit</option>
+          <option value="grain">Grain</option>
+          <option value="dairy">Dairy</option>
         </select>
+        {errors.type && <p className="text-red-500 text-sm mt-1">{errors.type.message}</p>}
       </div>
 
       <div>
@@ -98,6 +123,22 @@ export default function FoodForm({ onSubmit, isLoading, initialData, onCancel })
           type="submit"
           disabled={isLoading}
           className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md disabled:opacity-50"
+        >
+          {isLoading ? 'Saving...' : initialData ? 'Update Item' : 'Add Item'}
+        </button>
+        {onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded-md"
+          >
+            Cancel
+          </button>
+        )}
+      </div>
+    </form>
+  )
+}
         >
           {isLoading ? 'Saving...' : 'Save Item'}
         </button>

@@ -4,7 +4,7 @@ const escapeHtml = require('escape-html');
 exports.getAllItems = async (req, res) => {
     try {
         const groupId = req.user.groupId;
-        const sql = 'SELECT id, name, quantity, dateprepared, type, lastallocated, createdBy FROM food WHERE groupId = $1 ORDER BY createddate DESC';
+        const sql = 'SELECT id, name, quantity, unit, dateprepared, type, lastallocated, notes, createdBy FROM food WHERE groupId = $1 ORDER BY createddate DESC';
         const items = await pool.query(sql, [groupId]);
 
         res.status(200).json(items.rows);
@@ -20,7 +20,7 @@ exports.getSingleItem = async (req, res) => {
         const itemId = req.params.id;
         const groupId = req.user.groupId;
 
-        const sql = 'SELECT id, name, quantity, dateprepared, type, lastallocated, createdBy FROM food WHERE id = $1 AND groupId = $2';
+        const sql = 'SELECT id, name, quantity, unit, dateprepared, type, lastallocated, notes, createdBy FROM food WHERE id = $1 AND groupId = $2';
         const items = await pool.query(sql, [itemId, groupId]);
         const item = items.rows.length > 0 ? items.rows[0] : null;
 
@@ -39,7 +39,7 @@ exports.getSingleItem = async (req, res) => {
 
 exports.createItem = async (req, res) => {
   try {
-    const { name, quantity, dateprepared, type, lastallocated } = req.body;
+    const { name, quantity, unit, dateprepared, type, lastallocated, notes } = req.body;
     const groupId = req.user.groupId;
     const userId = req.user.userId;
 
@@ -48,8 +48,8 @@ exports.createItem = async (req, res) => {
     }
 
     const result = await pool.query(
-      'INSERT INTO food (name, quantity, dateprepared, type, lastallocated, groupId, createdBy) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, name, quantity, dateprepared, type, lastallocated, groupId, createdBy',
-      [name, quantity, dateprepared, type, lastallocated, groupId, userId]
+      'INSERT INTO food (name, quantity, unit, dateprepared, type, lastallocated, notes, groupId, createdBy) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, name, quantity, unit, dateprepared, type, lastallocated, notes, groupId, createdBy',
+      [name, quantity, unit, dateprepared, type, lastallocated, notes, groupId, userId]
     );
     res.status(201).json(result.rows[0]);
   } catch (error) {
@@ -62,7 +62,7 @@ exports.updateItem = async (req, res) => {
     try {
         const id = req.params.id;
         const groupId = req.user.groupId;
-        const { quantity, dateprepared, type, lastallocated } = req.body;
+        const { quantity, unit, dateprepared, type, lastallocated, notes } = req.body;
         let querySetParts = [];
         let queryValues = [];
 
@@ -81,6 +81,10 @@ exports.updateItem = async (req, res) => {
             queryValues.push(quantity);
             querySetParts.push(`quantity = $${queryValues.length}`);
         }
+        if (unit !== undefined) {
+            queryValues.push(unit);
+            querySetParts.push(`unit = $${queryValues.length}`);
+        }
         if (dateprepared !== undefined) {
             queryValues.push(dateprepared);
             querySetParts.push(`dateprepared = $${queryValues.length}`);
@@ -92,6 +96,10 @@ exports.updateItem = async (req, res) => {
         if(lastallocated !== undefined){
             queryValues.push(lastallocated);
             querySetParts.push(`lastallocated = $${queryValues.length}`);
+        }
+        if(notes !== undefined){
+            queryValues.push(notes);
+            querySetParts.push(`notes = $${queryValues.length}`);
         }
 
         if (querySetParts.length === 0) {

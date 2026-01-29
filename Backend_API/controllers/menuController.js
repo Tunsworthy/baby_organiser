@@ -20,7 +20,7 @@ SELECT
       json_build_object(
         'id', mi.id,
         'food_id', mi.food_id,
-        'name', mi.name,
+        'name', f.name,
         'quantity', mi.quantity,
         'allocated', mi.allocated,
         'active', mi.active
@@ -30,6 +30,7 @@ SELECT
   ) AS items
 FROM menus m
 LEFT JOIN menu_items mi ON mi.menu_id = m.id
+LEFT JOIN food f ON f.id = mi.food_id
 `;
 
 function shapeMenuAggregates(row) {
@@ -40,6 +41,7 @@ function shapeMenuAggregates(row) {
             return parsed.map((item) => ({
                 id: item.id,
                 food_id: item.food_id,
+                name: item.name,
                 quantity: item.quantity,
                 allocated: Boolean(item.allocated),
                 active: item.active !== false

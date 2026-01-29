@@ -142,9 +142,11 @@ CREATE TABLE IF NOT EXISTS food (
   id SERIAL PRIMARY KEY,
   name VARCHAR(50) NOT NULL,
   quantity INTEGER NOT NULL,
+  unit VARCHAR(50),
   dateprepared DATE,
   type VARCHAR(50),
   lastallocated DATE,
+  notes TEXT,
   groupId INTEGER NOT NULL DEFAULT 1 REFERENCES groups (id) ON DELETE CASCADE,
   createdBy INTEGER REFERENCES users (id) ON DELETE SET NULL
 );
@@ -154,6 +156,8 @@ CREATE TABLE IF NOT EXISTS food (
 const alterFoodTableQuery = `
   ALTER TABLE food ADD COLUMN IF NOT EXISTS groupId INTEGER REFERENCES groups (id) ON DELETE CASCADE;
   ALTER TABLE food ADD COLUMN IF NOT EXISTS createdBy INTEGER REFERENCES users (id) ON DELETE SET NULL;
+  ALTER TABLE food ADD COLUMN IF NOT EXISTS unit VARCHAR(50);
+  ALTER TABLE food ADD COLUMN IF NOT EXISTS notes TEXT;
 `;
 
 // Check if the "alerts" table exists

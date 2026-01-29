@@ -5,6 +5,8 @@ import PrivateRoute from './components/PrivateRoute'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import FoodInventory from './pages/FoodInventory'
+import Menus from './pages/Menus'
+import MenuSubstitute from './pages/MenuSubstitute'
 
 function App() {
   const checkAuth = useAuthStore((state) => state.checkAuth)
@@ -23,6 +25,22 @@ function App() {
           element={
             <PrivateRoute>
               <FoodInventory />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/menus"
+          element={
+            <PrivateRoute>
+              <Menus />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/menus/sub"
+          element={
+            <PrivateRoute>
+              <MenuSubstitute />
             </PrivateRoute>
           }
         />
