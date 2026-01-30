@@ -1,0 +1,172 @@
+import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAuthStore } from '../store/authStore'
+import Navbar from '../components/Navbar'
+
+export default function Dashboard() {
+  const navigate = useNavigate()
+  const user = useAuthStore((state) => state.user)
+  const accessToken = useAuthStore((state) => state.accessToken)
+
+  useEffect(() => {
+    if (!accessToken) {
+      navigate('/login')
+    }
+  }, [accessToken, navigate])
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">
+          Welcome back, {user?.firstName || 'User'}!
+        </h1>
+
+        {/* Grid Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Upcoming Menus Card */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-gray-800">Upcoming Menus</h2>
+              <button
+                onClick={() => navigate('/menus')}
+                className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+              >
+                View All →
+              </button>
+            </div>
+            <div className="space-y-3">
+              {/* Placeholder for upcoming menus */}
+              <div className="p-4 bg-gray-50 rounded-md border border-gray-200">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="font-medium text-gray-700">Today - Lunch</p>
+                    <p className="text-sm text-gray-500">Menu details will appear here</p>
+                  </div>
+                  <svg className="h-5 w-5 text-gray-400" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                    <path d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </div>
+              <div className="p-4 bg-gray-50 rounded-md border border-gray-200">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="font-medium text-gray-700">Today - Dinner</p>
+                    <p className="text-sm text-gray-500">Menu details will appear here</p>
+                  </div>
+                  <svg className="h-5 w-5 text-gray-400" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                    <path d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </div>
+              <div className="p-4 bg-gray-50 rounded-md border border-gray-200">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="font-medium text-gray-700">Tomorrow - Lunch</p>
+                    <p className="text-sm text-gray-500">Menu details will appear here</p>
+                  </div>
+                  <svg className="h-5 w-5 text-gray-400" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                    <path d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Low Food Alert Card */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-gray-800">Low Food Alert</h2>
+              <button
+                onClick={() => navigate('/inventory')}
+                className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+              >
+                Manage Inventory →
+              </button>
+            </div>
+            <div className="space-y-3">
+              {/* Placeholder for low stock items */}
+              <div className="flex items-start p-3 bg-amber-50 rounded-md border border-amber-200">
+                <svg className="h-5 w-5 text-amber-500 mt-0.5 mr-3" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                  <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <div className="flex-1">
+                  <p className="font-medium text-gray-800">Baby Porridge</p>
+                  <p className="text-sm text-gray-600">Only 2 packs remaining</p>
+                </div>
+              </div>
+              <div className="flex items-start p-3 bg-amber-50 rounded-md border border-amber-200">
+                <svg className="h-5 w-5 text-amber-500 mt-0.5 mr-3" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                  <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <div className="flex-1">
+                  <p className="font-medium text-gray-800">Fresh Vegetables</p>
+                  <p className="text-sm text-gray-600">Only 1 oz remaining</p>
+                </div>
+              </div>
+              <div className="p-4 text-center text-gray-500 text-sm">
+                Low stock alerts will appear here
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <button
+            onClick={() => navigate('/inventory')}
+            className="p-6 bg-white rounded-lg shadow hover:shadow-md transition-shadow text-left"
+          >
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg className="h-8 w-8 text-blue-600" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                  <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+              </div>
+              <div className="ml-4">
+                <h3 className="text-lg font-semibold text-gray-900">Food Inventory</h3>
+                <p className="text-sm text-gray-500">Manage your items</p>
+              </div>
+            </div>
+          </button>
+
+          <button
+            onClick={() => navigate('/menus')}
+            className="p-6 bg-white rounded-lg shadow hover:shadow-md transition-shadow text-left"
+          >
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg className="h-8 w-8 text-green-600" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                  <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </div>
+              <div className="ml-4">
+                <h3 className="text-lg font-semibold text-gray-900">Menus</h3>
+                <p className="text-sm text-gray-500">View meal plans</p>
+              </div>
+            </div>
+          </button>
+
+          <button
+            className="p-6 bg-white rounded-lg shadow hover:shadow-md transition-shadow text-left opacity-50 cursor-not-allowed"
+            disabled
+          >
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg className="h-8 w-8 text-purple-600" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                  <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+              <div className="ml-4">
+                <h3 className="text-lg font-semibold text-gray-900">Groups</h3>
+                <p className="text-sm text-gray-500">Coming soon</p>
+              </div>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}

@@ -4,12 +4,11 @@ import { useAuthStore } from '../store/authStore'
 import { useFoodStore } from '../store/foodStore'
 import FoodTable from '../components/FoodTable'
 import FoodForm from '../components/FoodForm'
+import Navbar from '../components/Navbar'
 
 export default function FoodInventory() {
   const navigate = useNavigate()
-  const user = useAuthStore((state) => state.user)
   const accessToken = useAuthStore((state) => state.accessToken)
-  const logout = useAuthStore((state) => state.logout)
 
   const { items, isLoading, fetchItems, addItem, updateItem, deleteItem } = useFoodStore()
 
@@ -57,33 +56,13 @@ export default function FoodInventory() {
     }
   }
 
-  const handleLogout = () => {
-    logout()
-    navigate('/login')
-  }
-
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow">
-        <div className="max-w-6xl mx-auto px-4 py-6 flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Food Inventory</h1>
-            {user && (
-              <p className="text-gray-600 text-sm mt-1">Welcome, {user.firstName || user.email}</p>
-            )}
-          </div>
-          <button
-            onClick={handleLogout}
-            className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg"
-          >
-            Logout
-          </button>
-        </div>
-      </header>
+      <Navbar />
 
       {/* Main Content */}
       <main className="max-w-6xl mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-6">Food Inventory</h1>
         {formError && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
             {formError}

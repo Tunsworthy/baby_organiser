@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { menuService } from '../services/menuService'
 import { foodService } from '../services/foodService'
+import Navbar from '../components/Navbar'
 
 const MEAL_TYPES = ['Lunch', 'Dinner']
 
@@ -121,14 +122,14 @@ export default function Menus() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow">
-        <div className="max-w-6xl mx-auto px-4 py-6">
+      <Navbar />
+
+      <main className="max-w-6xl mx-auto px-4 py-8 space-y-6">
+        <div>
           <h1 className="text-3xl font-bold text-gray-900">Menus</h1>
           <p className="text-gray-600 mt-1">{formatDisplayDate(currentDate)}</p>
         </div>
-      </header>
 
-      <main className="max-w-6xl mx-auto px-4 py-8 space-y-6">
         <nav className="flex justify-center gap-4">
           <button
             className="px-4 py-2 rounded border bg-white disabled:opacity-50"

@@ -4,6 +4,7 @@ import { useAuthStore } from './store/authStore'
 import PrivateRoute from './components/PrivateRoute'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import Dashboard from './pages/Dashboard'
 import FoodInventory from './pages/FoodInventory'
 import Menus from './pages/Menus'
 import MenuSubstitute from './pages/MenuSubstitute'
@@ -22,6 +23,14 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route
           path="/dashboard"
+          element={
+            <PrivateRoute>
+              <Dashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/inventory"
           element={
             <PrivateRoute>
               <FoodInventory />
