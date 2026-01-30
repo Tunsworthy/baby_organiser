@@ -1,18 +1,38 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
+import { useFoodStore } from '../store/foodStore'
 import Navbar from '../components/Navbar'
 
 export default function Dashboard() {
   const navigate = useNavigate()
   const user = useAuthStore((state) => state.user)
   const accessToken = useAuthStore((state) => state.accessToken)
+  const { items: foodItems, fetchItems } = useFoodStore()
+  const [isLoadingFood, setIsLoadingFood] = useState(false)
 
   useEffect(() => {
     if (!accessToken) {
       navigate('/login')
+      return
     }
-  }, [accessToken, navigate])
+    
+    const loadFood = async () => {
+      setIsLoadingFood(true)
+      try {
+        await fetchItems()
+      } catch (err) {
+        console.error('Failed to load food items:', err)
+      } finally {
+        setIsLoadingFood(false)
+      }
+    }
+    
+    loadFood()
+  }, [accessToken, navigate, fetchItems])
+
+  // Get items with quantity <= 5
+  const lowStockItems = foodItems.filter(item => item.quantity <= 5).slice(0, 5)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -87,28 +107,25 @@ export default function Dashboard() {
               </button>
             </div>
             <div className="space-y-3">
-              {/* Placeholder for low stock items */}
-              <div className="flex items-start p-3 bg-amber-50 rounded-md border border-amber-200">
-                <svg className="h-5 w-5 text-amber-500 mt-0.5 mr-3" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                  <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-                <div className="flex-1">
-                  <p className="font-medium text-gray-800">Baby Porridge</p>
-                  <p className="text-sm text-gray-600">Only 2 packs remaining</p>
+              {isLoadingFood ? (
+                <div className="text-center py-8 text-gray-500">Loading inventory...</div>
+              ) : lowStockItems.length > 0 ? (
+                lowStockItems.map((item) => (
+                  <div key={item.id} className="flex items-start p-3 bg-amber-50 rounded-md border border-amber-200">
+                    <svg className="h-5 w-5 text-amber-500 mt-0.5 mr-3" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                      <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-800">{item.name}</p>
+                      <p className="text-sm text-gray-600">Only {item.quantity} {item.unit || 'items'} remaining</p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="p-4 text-center text-green-600 text-sm bg-green-50 rounded-md border border-green-200">
+                  ✓ All items are well stocked!
                 </div>
-              </div>
-              <div className="flex items-start p-3 bg-amber-50 rounded-md border border-amber-200">
-                <svg className="h-5 w-5 text-amber-500 mt-0.5 mr-3" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                  <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-                <div className="flex-1">
-                  <p className="font-medium text-gray-800">Fresh Vegetables</p>
-                  <p className="text-sm text-gray-600">Only 1 oz remaining</p>
-                </div>
-              </div>
-              <div className="p-4 text-center text-gray-500 text-sm">
-                Low stock alerts will appear here
-              </div>
+              )}
             </div>
           </div>
         </div>

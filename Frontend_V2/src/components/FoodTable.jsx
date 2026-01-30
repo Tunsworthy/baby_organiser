@@ -29,15 +29,27 @@ export default function FoodTable({ items, onEdit, onDelete, isLoading }) {
         </thead>
         <tbody>
           {items.map((item) => {
-            const isAvailable = item.quantity > 0
             const lastServed = item.lastallocated ? item.lastallocated.split('T')[0] : '-'
             const datePrepared = item.dateprepared ? item.dateprepared.split('T')[0] : '-'
+            
+            // Determine status based on quantity
+            let statusColor, statusText
+            if (item.quantity === 0) {
+              statusColor = 'bg-red-600'
+              statusText = 'Unavailable'
+            } else if (item.quantity < 5) {
+              statusColor = 'bg-amber-500'
+              statusText = 'Low'
+            } else {
+              statusColor = 'bg-green-600'
+              statusText = 'Available'
+            }
             
             return (
               <tr key={item.id} className="border-b hover:bg-gray-50">
                 <td className="px-6 py-4 text-sm">
-                  <span className={`inline-block px-3 py-1 rounded text-white text-xs font-medium ${isAvailable ? 'bg-green-600' : 'bg-red-600'}`}>
-                    {isAvailable ? 'Available' : 'Not Available'}
+                  <span className={`inline-block px-3 py-1 rounded text-white text-xs font-medium ${statusColor}`}>
+                    {statusText}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-900">{item.name}</td>
