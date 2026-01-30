@@ -40,16 +40,32 @@ exports.getSingleItem = async (req, res) => {
 exports.createItem = async (req, res) => {
   try {
     const { name, quantity, unit, dateprepared, type, lastallocated, notes } = req.body;
-    const groupId = req.user.groupId;
-    const userId = req.user.userId;
+    const groupId = req.user?.groupId;
+    const userId = req.user?.userId;
+
+    const normalizedDatePrepared = dateprepared === '' ? null : dateprepared;
+    const normalizedLastAllocated = lastallocated === '' ? null : lastallocated;
+    const parsedQuantity = Number(quantity);
 
     if (!name || quantity === undefined) {
       return res.status(400).json({ error: 'Name and quantity are required' });
     }
 
+    if (!Number.isFinite(parsedQuantity)) {
+      return res.status(400).json({ error: 'Quantity must be a valid number' });
+    }
+
+    if (!normalizedDatePrepared) {
+      return res.status(400).json({ error: 'Date prepared is required' });
+    }
+
+    if (!groupId || !userId) {
+      return res.status(400).json({ error: 'User group information is missing' });
+    }
+
     const result = await pool.query(
       'INSERT INTO food (name, quantity, unit, dateprepared, type, lastallocated, notes, groupId, createdBy) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, name, quantity, unit, dateprepared, type, lastallocated, notes, groupId, createdBy',
-      [name, quantity, unit, dateprepared, type, lastallocated, notes, groupId, userId]
+      [name, parsedQuantity, unit || null, normalizedDatePrepared, type || null, normalizedLastAllocated, notes || null, groupId, userId]
     );
     res.status(201).json(result.rows[0]);
   } catch (error) {
@@ -78,27 +94,31 @@ exports.updateItem = async (req, res) => {
 
         // Check which fields are provided and prepare them for the SQL query
         if (quantity !== undefined) {
-            queryValues.push(quantity);
+          const parsedQuantity = Number(quantity);
+          if (!Number.isFinite(parsedQuantity)) {
+            return res.status(400).json({ error: 'Quantity must be a valid number' });
+          }
+          queryValues.push(parsedQuantity);
             querySetParts.push(`quantity = $${queryValues.length}`);
         }
         if (unit !== undefined) {
-            queryValues.push(unit);
+          queryValues.push(unit || null);
             querySetParts.push(`unit = $${queryValues.length}`);
         }
         if (dateprepared !== undefined) {
-            queryValues.push(dateprepared);
+          queryValues.push(dateprepared === '' ? null : dateprepared);
             querySetParts.push(`dateprepared = $${queryValues.length}`);
         }
         if (type !== undefined) {
-            queryValues.push(type);
+          queryValues.push(type || null);
             querySetParts.push(`type = $${queryValues.length}`);
         }
         if(lastallocated !== undefined){
-            queryValues.push(lastallocated);
+          queryValues.push(lastallocated === '' ? null : lastallocated);
             querySetParts.push(`lastallocated = $${queryValues.length}`);
         }
         if(notes !== undefined){
-            queryValues.push(notes);
+          queryValues.push(notes || null);
             querySetParts.push(`notes = $${queryValues.length}`);
         }
 
