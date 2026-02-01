@@ -57,16 +57,18 @@ export const useAuthStore = create((set) => ({
   },
 
   checkAuth: async () => {
-    const token = localStorage.getItem('accessToken')
-    const userStr = localStorage.getItem('user')
-    if (token && userStr) {
-      try {
-        const user = JSON.parse(userStr)
-        set({ accessToken: token, user })
-      } catch (e) {
-        console.error('Failed to parse user from localStorage', e)
-        localStorage.removeItem('user')
+    return Promise.resolve().then(() => {
+      const token = localStorage.getItem('accessToken')
+      const userStr = localStorage.getItem('user')
+      if (token && userStr) {
+        try {
+          const user = JSON.parse(userStr)
+          set({ accessToken: token, user })
+        } catch (e) {
+          console.error('Failed to parse user from localStorage', e)
+          localStorage.removeItem('user')
+        }
       }
-    }
+    })
   }
 }))

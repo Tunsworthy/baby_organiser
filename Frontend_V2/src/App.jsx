@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuthStore } from './store/authStore'
 import PrivateRoute from './components/PrivateRoute'
 import Login from './pages/Login'
@@ -11,51 +11,58 @@ import MenuSubstitute from './pages/MenuSubstitute'
 
 function App() {
   const checkAuth = useAuthStore((state) => state.checkAuth)
+  const [isChecking, setIsChecking] = useState(true)
 
   useEffect(() => {
-    checkAuth()
+    checkAuth().finally(() => setIsChecking(false))
   }, [checkAuth])
 
   return (
     <Router>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route
-          path="/dashboard"
-          element={
-            <PrivateRoute>
-              <Dashboard />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/inventory"
-          element={
-            <PrivateRoute>
-              <FoodInventory />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/menus"
-          element={
-            <PrivateRoute>
-              <Menus />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/menus/sub"
-          element={
-            <PrivateRoute>
-              <MenuSubstitute />
-            </PrivateRoute>
-          }
-        />
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
+      {isChecking ? (
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-gray-600">Loading...</div>
+        </div>
+      ) : (
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route
+            path="/dashboard"
+            element={
+              <PrivateRoute>
+                <Dashboard />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/inventory"
+            element={
+              <PrivateRoute>
+                <FoodInventory />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/menus"
+            element={
+              <PrivateRoute>
+                <Menus />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/menus/sub"
+            element={
+              <PrivateRoute>
+                <MenuSubstitute />
+              </PrivateRoute>
+            }
+          />
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      )}
     </Router>
   )
 }

@@ -267,7 +267,7 @@ export default function Menus() {
             ))}
           </div>
 
-          <div className="grid grid-cols-7 gap-0.5 mt-4">
+          <div className="grid grid-cols-7 gap-0 mt-4">
             {monthGrid.map((week, wi) => (
               week.map((day) => {
                 const ds = toDateString(day)
@@ -308,40 +308,59 @@ export default function Menus() {
               const menu = menusByType[mealType]
               if (!menu) return null
 
+              const hasAllocatedItems = menu.items.some((item) => item.allocated)
+
               return (
                 <section key={mealType} className="bg-white rounded-lg shadow p-6">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-xl font-semibold text-gray-800">{mealType}</h2>
                     <button
-                      className="px-3 py-1 text-sm border rounded hover:bg-gray-50"
-                      onClick={() => openEditModal(menu)}
+                      className={`px-3 py-1 text-sm border rounded transition ${
+                        hasAllocatedItems
+                          ? 'bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed'
+                          : 'hover:bg-gray-50'
+                      }`}
+                      onClick={() => !hasAllocatedItems && openEditModal(menu)}
+                      disabled={hasAllocatedItems}
+                      title={hasAllocatedItems ? 'Cannot edit menu with allocated items' : 'Edit menu'}
                     >
                       ✎ Edit
                     </button>
                   </div>
 
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {menu.items.map((item) => {
                       const displayName = item.name || foodMap[item.food_id]?.name || 'Unknown'
 
                       return (
-                        <div key={item.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <div className="font-medium text-gray-900">{displayName}</div>
-                              <div className="text-sm text-gray-600 mt-1">
-                                <span className="inline-block mr-4">Qty: <span className="font-semibold">{item.quantity}</span></span>
-                                <span className="inline-block">Type: <span className="font-semibold">{menu.type}</span></span>
+                        <div key={item.id} className={`rounded-lg p-4 border-l-4 transition ${
+                          item.allocated
+                            ? 'bg-green-50 border-l-green-500'
+                            : 'bg-blue-50 border-l-blue-500'
+                        }`}>
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-3">
+                                <div className="font-semibold text-gray-900 text-lg">{displayName}</div>
+                                <div className="flex gap-2">
+                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-white border border-gray-200 text-gray-700">
+                                    Qty: {item.quantity}
+                                  </span>
+                                  {item.allocated && (
+                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-200 text-green-800">
+                                      ✓ Allocated
+                                    </span>
+                                  )}
+                                </div>
                               </div>
-                              {item.allocated && <div className="text-xs text-green-700 mt-2">✓ Allocated</div>}
                             </div>
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 ml-4 flex-shrink-0">
                               <button
                                 type="button"
-                                className={`px-3 py-2 rounded border transition ${
+                                className={`p-2 rounded-full transition ${
                                   item.allocated
-                                    ? 'bg-green-100 border-green-300 text-green-700'
-                                    : 'bg-white border-gray-300 text-gray-700 hover:bg-green-50'
+                                    ? 'bg-green-200 text-green-700'
+                                    : 'bg-white border border-gray-300 text-gray-700 hover:bg-green-100 hover:border-green-300 hover:text-green-700'
                                 }`}
                                 onClick={() => handleAllocate(menu, item)}
                                 disabled={item.allocated}
@@ -351,10 +370,10 @@ export default function Menus() {
                               </button>
                               <button
                                 type="button"
-                                className={`px-3 py-2 rounded border transition ${
+                                className={`p-2 rounded-full transition ${
                                   item.allocated
-                                    ? 'bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed'
-                                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-100'
+                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                    : 'bg-white border border-gray-300 text-gray-700 hover:bg-blue-100 hover:border-blue-300 hover:text-blue-700'
                                 }`}
                                 onClick={() => handleSubstitute(menu, item, displayName)}
                                 disabled={item.allocated}
