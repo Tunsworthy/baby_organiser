@@ -80,23 +80,6 @@ export default function Menus() {
     }
   }, [accessToken])
 
-  useEffect(() => {
-    if (accessToken) {
-      loadFoods()
-      loadAllMenus()
-    }
-  }, [accessToken, loadFoods, loadAllMenus])
-
-  useEffect(() => {
-    if (accessToken) {
-      loadMenusForDate(currentDate)
-    }
-  }, [currentDate, accessToken, loadMenusForDate])
-
-  const handleDayClick = (dateStr) => {
-    navigate(`/menus?date=${dateStr}`)
-  }
-
   const loadMenusForDate = useCallback(async (dateStr) => {
     if (!accessToken) return
     setIsLoading(true)
@@ -114,6 +97,23 @@ export default function Menus() {
       setIsLoading(false)
     }
   }, [accessToken])
+
+  useEffect(() => {
+    if (accessToken) {
+      loadFoods()
+      loadAllMenus()
+    }
+  }, [accessToken, loadFoods, loadAllMenus])
+
+  useEffect(() => {
+    if (accessToken) {
+      loadMenusForDate(currentDate)
+    }
+  }, [currentDate, accessToken, loadMenusForDate])
+
+  const handleDayClick = (dateStr) => {
+    navigate(`/menus?date=${dateStr}`)
+  }
 
   const monthPrev = () => setCalendarMonth((d) => new Date(d.getFullYear(), d.getMonth() - 1, 1))
   const monthNext = () => setCalendarMonth((d) => new Date(d.getFullYear(), d.getMonth() + 1, 1))

@@ -8,6 +8,8 @@ import Dashboard from './pages/Dashboard'
 import FoodInventory from './pages/FoodInventory'
 import Menus from './pages/Menus'
 import MenuSubstitute from './pages/MenuSubstitute'
+import Groups from './pages/Groups'
+import GroupDetails from './pages/GroupDetails'
 
 function App() {
   const checkAuth = useAuthStore((state) => state.checkAuth)
@@ -56,6 +58,22 @@ function App() {
             element={
               <PrivateRoute>
                 <MenuSubstitute />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/groups"
+            element={
+              <PrivateRoute>
+                <Groups />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/groups/:groupId"
+            element={
+              <PrivateRoute>
+                <GroupDetails />
               </PrivateRoute>
             }
           />
