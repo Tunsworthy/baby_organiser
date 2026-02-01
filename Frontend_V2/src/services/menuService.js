@@ -16,6 +16,11 @@ export const menuService = {
     return response.data
   },
 
+  createMenu: async (menuData) => {
+    const response = await apiClient.post('/api/menus', menuData)
+    return response.data
+  },
+
   updateMenu: async (id, items) => {
     const response = await apiClient.put(`/api/menus/${id}`, { items })
     return response.data
