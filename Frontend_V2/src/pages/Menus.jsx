@@ -30,6 +30,7 @@ export default function Menus() {
   const [showCreate, setShowCreate] = useState(false)
   const [showEdit, setShowEdit] = useState(false)
   const [editMenu, setEditMenu] = useState(null)
+  const [editMode, setEditMode] = useState('edit')
   const [editingItemId, setEditingItemId] = useState(null)
   const [editingItemQty, setEditingItemQty] = useState(1)
 
@@ -235,30 +236,32 @@ export default function Menus() {
     navigate(`/menus/sub?${params.toString()}`)
   }
 
-  const handleOpenEditMenu = (menu) => {
+  const handleAddItemToMenu = (menu) => {
     setEditMenu(menu)
-    const initialItems = menu.items?.length
-      ? menu.items.map((item) => ({
-          id: item.id,
-          food_id: item.food_id || '',
-          quantity: item.quantity || 1,
-          allocated: item.allocated
-        }))
-      : [{ food_id: '', quantity: 1 }]
-    editItems.setItems(initialItems)
+    setEditMode('add')
+    editItems.setItems([{ food_id: '', quantity: 1 }])
     setShowEdit(true)
   }
 
   const handleEditMenu = async () => {
     try {
       setError(null)
-      const updatedMenu = await menuService.updateMenu(editMenu.id, editItems.items)
+      const newItems = editItems.items
+        .filter((it) => it.food_id || it.name)
+        .map((it) => ({ food_id: it.food_id || null, quantity: Number(it.quantity) || 1 }))
+
+      const updatedItems = editMode === 'add'
+        ? [...(editMenu?.items || []), ...newItems]
+        : editItems.items
+
+      const updatedMenu = await menuService.updateMenu(editMenu.id, updatedItems)
       setMenusByType((prev) => ({
         ...prev,
         [updatedMenu.type]: updatedMenu
       }))
       setShowEdit(false)
       setEditMenu(null)
+      setEditMode('edit')
       editItems.reset()
       loadAllMenus()
     } catch (err) {
@@ -357,7 +360,7 @@ export default function Menus() {
                     <h2 className="text-xl font-semibold text-gray-800">{mealType}</h2>
                     <button
                       type="button"
-                      onClick={() => handleOpenEditMenu(menu)}
+                      onClick={() => handleAddItemToMenu(menu)}
                       className="px-3 py-1.5 text-sm rounded border bg-white hover:bg-gray-50"
                     >
                       + Add Item
@@ -677,7 +680,7 @@ export default function Menus() {
         </Modal>
 
         {/* Edit Modal */}
-        <Modal isOpen={showEdit && !!editMenu} title={`Edit ${editMenu?.type} Menu for ${formatDisplayDate(currentDate)}`} onClose={() => setShowEdit(false)} size="lg">
+        <Modal isOpen={showEdit && !!editMenu} title={`${editMode === 'add' ? 'Add Item to' : 'Edit'} ${editMenu?.type} Menu for ${formatDisplayDate(currentDate)}`} onClose={() => setShowEdit(false)} size="lg">
           <div className="space-y-3">
             <div className="space-y-2">
               {editItems.items.map((row, idx) => {

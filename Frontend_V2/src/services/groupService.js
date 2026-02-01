@@ -36,5 +36,10 @@ export const groupService = {
   async updateMemberRole(groupId, memberId, role) {
     const response = await apiClient.patch(`/api/groups/${groupId}/members/${memberId}`, { role })
     return response.data
+  },
+
+  async inviteMember(groupId, email) {
+    const response = await apiClient.post(`/api/groups/${groupId}/members`, { email })
+    return response.data
   }
 }

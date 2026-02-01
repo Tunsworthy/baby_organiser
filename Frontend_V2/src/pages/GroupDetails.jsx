@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { groupService } from '../services/groupService'
+import { childService } from '../services/childService'
 import Navbar from '../components/Navbar'
 import ErrorAlert from '../components/ErrorAlert'
+import Modal from '../components/Modal'
 import { getRoleDisplay } from '../utils/roleUtils'
 
 export default function GroupDetails() {
@@ -12,18 +14,27 @@ export default function GroupDetails() {
   const user = useAuthStore((state) => state.user)
   const [group, setGroup] = useState(null)
   const [members, setMembers] = useState([])
+  const [children, setChildren] = useState([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isChildrenLoading, setIsChildrenLoading] = useState(true)
   const [error, setError] = useState(null)
   const [inviteCode, setInviteCode] = useState(null)
   const [editingMemberId, setEditingMemberId] = useState(null)
   const [editingRole, setEditingRole] = useState('')
   const [showInviteCodeCopied, setShowInviteCodeCopied] = useState(false)
   const [removingMemberId, setRemovingMemberId] = useState(null)
+  const [showCreateChild, setShowCreateChild] = useState(false)
+  const [childName, setChildName] = useState('')
+  const [isCreatingChild, setIsCreatingChild] = useState(false)
+  const [showInviteMember, setShowInviteMember] = useState(false)
+  const [inviteEmail, setInviteEmail] = useState('')
+  const [isInvitingMember, setIsInvitingMember] = useState(false)
 
   const isOwner = group && user && group.user_role === 'owner'
 
   useEffect(() => {
     loadGroupDetails()
+    loadChildren()
   }, [groupId])
 
   const loadGroupDetails = async () => {
@@ -38,6 +49,19 @@ export default function GroupDetails() {
       console.error(err)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const loadChildren = async () => {
+    setIsChildrenLoading(true)
+    try {
+      const data = await childService.getAll()
+      setChildren(data)
+    } catch (err) {
+      setError('Failed to load children')
+      console.error(err)
+    } finally {
+      setIsChildrenLoading(false)
     }
   }
 
@@ -98,6 +122,57 @@ export default function GroupDetails() {
     }
   }
 
+  const handleCreateChild = async (e) => {
+    e.preventDefault()
+    if (!childName.trim()) return
+
+    setIsCreatingChild(true)
+    setError(null)
+    try {
+      await childService.create(childName.trim())
+      setChildName('')
+      setShowCreateChild(false)
+      await loadChildren()
+    } catch (err) {
+      setError('Failed to create child')
+      console.error(err)
+    } finally {
+      setIsCreatingChild(false)
+    }
+  }
+
+  const handleDeleteChild = async (childId) => {
+    if (window.confirm('Are you sure you want to delete this child?')) {
+      try {
+        setError(null)
+        await childService.remove(childId)
+        setChildren((prev) => prev.filter((c) => c.id !== childId))
+      } catch (err) {
+        setError('Failed to delete child')
+        console.error(err)
+      }
+    }
+  }
+
+  const handleInviteMember = async (e) => {
+    e.preventDefault()
+    if (!inviteEmail.trim()) return
+
+    setIsInvitingMember(true)
+    setError(null)
+    try {
+      await groupService.inviteMember(groupId, inviteEmail.trim())
+      setInviteEmail('')
+      setShowInviteMember(false)
+      await loadGroupDetails()
+    } catch (err) {
+      setError('Failed to invite member')
+      console.error(err)
+    } finally {
+      setIsInvitingMember(false)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -151,35 +226,85 @@ export default function GroupDetails() {
         {isOwner && (
           <div className="bg-white rounded-lg shadow-md p-6 mb-8">
             <h2 className="text-2xl font-bold text-gray-800 mb-4">Invite Members</h2>
-            {!inviteCode ? (
-              <button
-                onClick={handleGenerateInviteCode}
-                className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition"
-              >
-                Generate Invite Code
-              </button>
-            ) : (
-              <div className="flex items-center gap-4">
-                <div className="flex-1">
-                  <p className="text-gray-600 mb-2">Share this code:</p>
-                  <div className="bg-gray-100 p-4 rounded-lg font-mono text-lg font-bold text-center">
-                    {inviteCode}
-                  </div>
-                </div>
+            <div className="space-y-4">
+              <div>
+                <h3 className="font-semibold text-gray-700 mb-2">Option 1: Invite by Email</h3>
                 <button
-                  onClick={handleCopyInviteCode}
-                  className={`font-bold py-2 px-6 rounded-lg transition ${
-                    showInviteCodeCopied
-                      ? 'bg-green-600 text-white'
-                      : 'bg-blue-600 hover:bg-blue-700 text-white'
-                  }`}
+                  onClick={() => setShowInviteMember(true)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition"
                 >
-                  {showInviteCodeCopied ? '✓ Copied!' : '📋 Copy'}
+                  + Invite Member
                 </button>
               </div>
-            )}
+              <div className="border-t pt-4">
+                <h3 className="font-semibold text-gray-700 mb-2">Option 2: Invite by Code</h3>
+                {!inviteCode ? (
+                  <button
+                    onClick={handleGenerateInviteCode}
+                    className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition"
+                  >
+                    Generate Invite Code
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-4">
+                    <div className="flex-1">
+                      <p className="text-gray-600 mb-2">Share this code:</p>
+                      <div className="bg-gray-100 p-4 rounded-lg font-mono text-lg font-bold text-center">
+                        {inviteCode}
+                      </div>
+                    </div>
+                    <button
+                      onClick={handleCopyInviteCode}
+                      className={`font-bold py-2 px-6 rounded-lg transition ${
+                        showInviteCodeCopied
+                          ? 'bg-green-600 text-white'
+                          : 'bg-blue-600 hover:bg-blue-700 text-white'
+                      }`}
+                    >
+                      {showInviteCodeCopied ? '✓ Copied!' : '📋 Copy'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
+
+        {/* Children Section */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold text-gray-800">Children</h2>
+            <button
+              onClick={() => setShowCreateChild(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition"
+            >
+              + Add Child
+            </button>
+          </div>
+
+          {isChildrenLoading ? (
+            <p className="text-gray-600">Loading children...</p>
+          ) : children.length === 0 ? (
+            <p className="text-gray-600">No children yet. Add one to link menus.</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {children.map((child) => (
+                <div key={child.id} className="border rounded-lg p-4 bg-gray-50">
+                  <div className="font-semibold text-gray-900">{child.name}</div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    Added {child.createdAt ? new Date(child.createdAt).toLocaleDateString() : 'Recently'}
+                  </div>
+                  <button
+                    onClick={() => handleDeleteChild(child.id)}
+                    className="mt-3 text-sm text-red-600 hover:text-red-800"
+                  >
+                    🗑️ Remove
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Members Section */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -262,6 +387,66 @@ export default function GroupDetails() {
           </div>
         </div>
       </div>
+
+      <Modal isOpen={showCreateChild} title="Add Child" onClose={() => setShowCreateChild(false)}>
+        <form onSubmit={handleCreateChild}>
+          <input
+            type="text"
+            placeholder="Child name"
+            value={childName}
+            onChange={(e) => setChildName(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-6 focus:outline-none focus:border-blue-500"
+            disabled={isCreatingChild}
+          />
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => setShowCreateChild(false)}
+              className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg transition disabled:opacity-50"
+              disabled={isCreatingChild}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition disabled:opacity-50"
+              disabled={isCreatingChild || !childName.trim()}
+            >
+              {isCreatingChild ? 'Adding...' : 'Add Child'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal isOpen={showInviteMember} title="Invite Member" onClose={() => setShowInviteMember(false)}>
+        <form onSubmit={handleInviteMember}>
+          <input
+            type="email"
+            placeholder="Member email address"
+            value={inviteEmail}
+            onChange={(e) => setInviteEmail(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-6 focus:outline-none focus:border-blue-500"
+            disabled={isInvitingMember}
+          />
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => setShowInviteMember(false)}
+              className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg transition disabled:opacity-50"
+              disabled={isInvitingMember}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition disabled:opacity-50"
+              disabled={isInvitingMember || !inviteEmail.trim()}
+            >
+              {isInvitingMember ? 'Inviting...' : 'Send Invite'}
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   )
 }
