@@ -3,7 +3,9 @@ import apiClient from './apiClient'
 export const groupService = {
   async getAll() {
     const response = await apiClient.get('/groups')
-    return response.data
+    const data = response.data
+    // Normalize response - handle both array and object format
+    return Array.isArray(data) ? data : (data?.groups || [])
   },
 
   async getById(groupId) {

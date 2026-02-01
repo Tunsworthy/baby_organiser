@@ -26,7 +26,7 @@ export default function Groups() {
     setError(null)
     try {
       const data = await groupService.getAll()
-      setGroups(data || [])
+      setGroups(data)
     } catch (err) {
       setError('Failed to load groups')
       console.error(err)

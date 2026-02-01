@@ -36,10 +36,16 @@ export default function Menus() {
   const createItems = useItemRows()
   const editItems = useItemRows()
 
-  const datesWithMenus = useMemo(() => {
-    const set = new Set()
-    allMenus.forEach((m) => set.add(m.date))
-    return set
+  // Create a map of dates to their menu types for dot rendering
+  const menusByDate = useMemo(() => {
+    const map = {}
+    allMenus.forEach((m) => {
+      if (!map[m.date]) {
+        map[m.date] = new Set()
+      }
+      map[m.date].add(m.type)
+    })
+    return map
   }, [allMenus])
 
   const loadFoods = useCallback(async () => {
@@ -285,7 +291,8 @@ export default function Menus() {
               week.map((day) => {
                 const ds = toDateString(day)
                 const isCurrentMonth = day.getMonth() === calendarMonth.getMonth()
-                const hasMenu = datesWithMenus.has(ds)
+                const menuTypes = menusByDate[ds] || new Set()
+                const menuCount = menuTypes.size
                 const isSelected = ds === currentDate
                 return (
                   <div key={ds} className="flex flex-col items-center py-1">
@@ -301,8 +308,14 @@ export default function Menus() {
                     >
                       {day.getDate()}
                     </button>
-                    <div className="h-2 flex items-center justify-center mt-0.5">
-                      {hasMenu && <div className="w-2 h-2 bg-green-500 rounded-full" />}
+                    <div id={`dot-${ds}`} className="h-2 flex items-center justify-center gap-0.5 mt-0.5">
+                      {menuCount > 0 && (
+                        <>
+                          {Array.from(menuTypes).map((type) => (
+                            <div key={type} className="w-1.5 h-1.5 bg-green-500 rounded-full" title={type} />
+                          ))}
+                        </>
+                      )}
                     </div>
                   </div>
                 )
@@ -330,130 +343,235 @@ export default function Menus() {
                   {menu.items.length === 0 ? (
                     <div className="text-center text-gray-500 text-sm p-4">No items for this menu</div>
                   ) : (
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead className="bg-gray-50 border-b">
-                          <tr>
-                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Item Name</th>
-                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Type</th>
-                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Quantity</th>
-                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Status</th>
-                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {menu.items.map((item) => {
-                            const displayName = item.name || foodMap[item.food_id]?.name || 'Unknown'
-                            const isEditing = editingItemId === item.id
+                    <>
+                      {/* Desktop Table View */}
+                      <div className="hidden md:block overflow-x-auto">
+                        <table className="w-full">
+                          <thead className="bg-gray-50 border-b">
+                            <tr>
+                              <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Item Name</th>
+                              <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Type</th>
+                              <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Quantity</th>
+                              <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Status</th>
+                              <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {menu.items.map((item) => {
+                              const displayName = item.name || foodMap[item.food_id]?.name || 'Unknown'
+                              const isEditing = editingItemId === item.id
 
-                            return (
-                              <tr key={item.id} className={`border-b transition ${item.allocated ? 'bg-green-50' : 'hover:bg-gray-50'}`}>
-                                <td className="px-4 py-3 text-sm text-gray-900 font-medium">{displayName}</td>
-                                <td className="px-4 py-3 text-sm text-gray-600">{mealType}</td>
-                                <td className="px-4 py-3 text-sm">
-                                  {isEditing ? (
-                                    <input
-                                      type="number"
-                                      min="1"
-                                      className="w-16 border rounded px-2 py-1"
-                                      value={editingItemQty}
-                                      onChange={(e) => setEditingItemQty(Number(e.target.value))}
-                                    />
-                                  ) : (
-                                    <span className="text-gray-600">{item.quantity}</span>
-                                  )}
-                                </td>
-                                <td className="px-4 py-3 text-sm">
-                                  <span className={`inline-block px-3 py-1 rounded text-white text-xs font-medium ${
-                                    item.allocated ? 'bg-green-600' : 'bg-blue-600'
-                                  }`}>
-                                    {item.allocated ? 'Allocated' : 'Pending'}
-                                  </span>
-                                </td>
-                                <td className="px-4 py-3 text-sm space-x-2 flex items-center">
-                                  {isEditing ? (
-                                    <>
-                                      <button
-                                        onClick={() => handleEditItemQty(menu, item)}
-                                        className="text-green-600 hover:text-green-800 text-lg"
-                                        title="Save"
-                                      >
-                                        ✓
-                                      </button>
-                                      <button
-                                        onClick={() => setEditingItemId(null)}
-                                        className="text-gray-600 hover:text-gray-800 text-lg"
-                                        title="Cancel"
-                                      >
-                                        ✕
-                                      </button>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <button
-                                        onClick={() => handleAllocate(menu, item)}
-                                        disabled={item.allocated}
-                                        className={`text-lg transition ${
-                                          item.allocated
-                                            ? 'text-gray-400 cursor-not-allowed'
-                                            : 'text-gray-600 hover:text-blue-600'
-                                        }`}
-                                        title="Allocate"
-                                      >
-                                        📦
-                                      </button>
-                                      <button
-                                        onClick={() => handleSubstitute(menu, item, displayName)}
-                                        disabled={item.allocated}
-                                        className={`text-lg transition ${
-                                          item.allocated
-                                            ? 'text-gray-400 cursor-not-allowed'
-                                            : 'text-gray-600 hover:text-blue-600'
-                                        }`}
-                                        title="Substitute"
-                                      >
-                                        🔁
-                                      </button>
-                                      <button
-                                        onClick={() => {
-                                          setEditingItemId(item.id)
-                                          setEditingItemQty(item.quantity)
-                                        }}
-                                        disabled={item.allocated}
-                                        className={`text-lg transition ${
-                                          item.allocated
-                                            ? 'text-gray-400 cursor-not-allowed'
-                                            : 'text-gray-600 hover:text-blue-600'
-                                        }`}
-                                        title="Edit quantity"
-                                      >
-                                        ✏️
-                                      </button>
-                                      <button
-                                        onClick={() => {
-                                          if (window.confirm('Delete this item?')) {
-                                            handleDeleteItem(menu, item.id)
-                                          }
-                                        }}
-                                        disabled={item.allocated}
-                                        className={`text-lg transition ${
-                                          item.allocated
-                                            ? 'text-gray-400 cursor-not-allowed'
-                                            : 'text-gray-600 hover:text-red-600'
-                                        }`}
-                                        title="Delete"
-                                      >
-                                        🗑️
-                                      </button>
-                                    </>
-                                  )}
-                                </td>
-                              </tr>
-                            )
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
+                              return (
+                                <tr key={item.id} className={`border-b transition ${item.allocated ? 'bg-green-50' : 'hover:bg-gray-50'}`}>
+                                  <td className="px-4 py-3 text-sm text-center text-gray-900 font-medium">{displayName}</td>
+                                  <td className="px-4 py-3 text-sm text-center text-gray-600">{mealType}</td>
+                                  <td className="px-4 py-3 text-sm text-center">
+                                    {isEditing ? (
+                                      <input
+                                        type="number"
+                                        min="1"
+                                        className="w-16 border rounded px-2 py-1 mx-auto block"
+                                        value={editingItemQty}
+                                        onChange={(e) => setEditingItemQty(Number(e.target.value))}
+                                      />
+                                    ) : (
+                                      <span className="text-gray-600">{item.quantity}</span>
+                                    )}
+                                  </td>
+                                  <td className="px-4 py-3 text-sm text-center">
+                                    <span className={`inline-block px-3 py-1 rounded text-white text-xs font-medium ${
+                                      item.allocated ? 'bg-green-600' : 'bg-blue-600'
+                                    }`}>
+                                      {item.allocated ? 'Allocated' : 'Pending'}
+                                    </span>
+                                  </td>
+                                  <td className="px-4 py-3 text-sm space-x-2 flex items-center justify-center">
+                                    {isEditing ? (
+                                      <>
+                                        <button
+                                          onClick={() => handleEditItemQty(menu, item)}
+                                          className="text-green-600 hover:text-green-800 text-lg"
+                                          title="Save"
+                                        >
+                                          ✓
+                                        </button>
+                                        <button
+                                          onClick={() => setEditingItemId(null)}
+                                          className="text-gray-600 hover:text-gray-800 text-lg"
+                                          title="Cancel"
+                                        >
+                                          ✕
+                                        </button>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <button
+                                          onClick={() => handleAllocate(menu, item)}
+                                          disabled={item.allocated}
+                                          className={`text-lg transition ${item.allocated ? 'opacity-40 cursor-not-allowed grayscale' : 'text-gray-600 hover:text-blue-600'}`}
+                                          title="Allocate"
+                                        >
+                                          📦
+                                        </button>
+                                        <button
+                                          onClick={() => handleSubstitute(menu, item, displayName)}
+                                          disabled={item.allocated}
+                                          className={`text-lg transition ${item.allocated ? 'opacity-40 cursor-not-allowed grayscale' : 'text-gray-600 hover:text-blue-600'}`}
+                                          title="Substitute"
+                                        >
+                                          🔁
+                                        </button>
+                                        <button
+                                          onClick={() => {
+                                            setEditingItemId(item.id)
+                                            setEditingItemQty(item.quantity)
+                                          }}
+                                          disabled={item.allocated}
+                                          className={`text-lg transition ${item.allocated ? 'opacity-40 cursor-not-allowed grayscale' : 'text-gray-600 hover:text-blue-600'}`}
+                                          title="Edit quantity"
+                                        >
+                                          ✏️
+                                        </button>
+                                        <button
+                                          onClick={() => {
+                                            if (window.confirm('Delete this item?')) {
+                                              handleDeleteItem(menu, item.id)
+                                            }
+                                          }}
+                                          disabled={item.allocated}
+                                          className={`text-lg transition ${item.allocated ? 'opacity-40 cursor-not-allowed grayscale' : 'text-gray-600 hover:text-red-600'}`}
+                                          title="Delete"
+                                        >
+                                          🗑️
+                                        </button>
+                                      </>
+                                    )}
+                                  </td>
+                                </tr>
+                              )
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Mobile Card View */}
+                      <div className="md:hidden space-y-3">
+                        {menu.items.map((item) => {
+                          const displayName = item.name || foodMap[item.food_id]?.name || 'Unknown'
+                          const isEditing = editingItemId === item.id
+
+                          return (
+                            <div key={item.id} className={`p-4 rounded-lg border-2 transition ${item.allocated ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
+                              <div className="flex items-start justify-between mb-3">
+                                <div className="flex-1">
+                                  <h3 className="font-semibold text-gray-900">{displayName}</h3>
+                                  <p className="text-sm text-gray-600">{mealType}</p>
+                                </div>
+                                <span className={`inline-block px-2 py-1 rounded text-white text-xs font-medium ${
+                                  item.allocated ? 'bg-green-600' : 'bg-blue-600'
+                                }`}>
+                                  {item.allocated ? 'Allocated' : 'Pending'}
+                                </span>
+                              </div>
+
+                              <div className="mb-3">
+                                <label className="text-xs text-gray-600 block mb-1">Quantity</label>
+                                {isEditing ? (
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    className="w-full border rounded px-2 py-1"
+                                    value={editingItemQty}
+                                    onChange={(e) => setEditingItemQty(Number(e.target.value))}
+                                  />
+                                ) : (
+                                  <span className="text-lg font-medium text-gray-900">{item.quantity}</span>
+                                )}
+                              </div>
+
+                              <div className="flex gap-2 flex-wrap">
+                                {isEditing ? (
+                                  <>
+                                    <button
+                                      onClick={() => handleEditItemQty(menu, item)}
+                                      className="flex-1 px-3 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition"
+                                      title="Save"
+                                    >
+                                      Save ✓
+                                    </button>
+                                    <button
+                                      onClick={() => setEditingItemId(null)}
+                                      className="flex-1 px-3 py-2 bg-gray-400 text-white rounded text-sm hover:bg-gray-500 transition"
+                                      title="Cancel"
+                                    >
+                                      Cancel ✕
+                                    </button>
+                                  </>
+                                ) : (
+                                  <>
+                                    <button
+                                      onClick={() => handleAllocate(menu, item)}
+                                      disabled={item.allocated}
+                                      className={`flex-1 px-3 py-2 rounded text-sm font-medium transition ${
+                                        item.allocated
+                                          ? 'opacity-40 cursor-not-allowed grayscale bg-gray-300 text-gray-600'
+                                          : 'bg-blue-600 text-white hover:bg-blue-700'
+                                      }`}
+                                      title="Allocate"
+                                    >
+                                      📦 Allocate
+                                    </button>
+                                    <button
+                                      onClick={() => handleSubstitute(menu, item, displayName)}
+                                      disabled={item.allocated}
+                                      className={`flex-1 px-3 py-2 rounded text-sm font-medium transition ${
+                                        item.allocated
+                                          ? 'opacity-40 cursor-not-allowed grayscale bg-gray-300 text-gray-600'
+                                          : 'bg-blue-600 text-white hover:bg-blue-700'
+                                      }`}
+                                      title="Substitute"
+                                    >
+                                      🔁 Sub
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setEditingItemId(item.id)
+                                        setEditingItemQty(item.quantity)
+                                      }}
+                                      disabled={item.allocated}
+                                      className={`flex-1 px-3 py-2 rounded text-sm font-medium transition ${
+                                        item.allocated
+                                          ? 'opacity-40 cursor-not-allowed grayscale bg-gray-300 text-gray-600'
+                                          : 'bg-blue-600 text-white hover:bg-blue-700'
+                                      }`}
+                                      title="Edit quantity"
+                                    >
+                                      ✏️ Edit
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        if (window.confirm('Delete this item?')) {
+                                          handleDeleteItem(menu, item.id)
+                                        }
+                                      }}
+                                      disabled={item.allocated}
+                                      className={`flex-1 px-3 py-2 rounded text-sm font-medium transition ${
+                                        item.allocated
+                                          ? 'opacity-40 cursor-not-allowed grayscale bg-gray-300 text-gray-600'
+                                          : 'bg-red-600 text-white hover:bg-red-700'
+                                      }`}
+                                      title="Delete"
+                                    >
+                                      🗑️
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </>
                   )}
                 </section>
               )
