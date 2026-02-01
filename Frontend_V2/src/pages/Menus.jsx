@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useAuthStore } from '../store/authStore'
 import { menuService } from '../services/menuService'
 import { foodService } from '../services/foodService'
 import Navbar from '../components/Navbar'
@@ -30,6 +31,7 @@ function toDateString(d) {
 export default function Menus() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
+  const accessToken = useAuthStore((state) => state.accessToken)
   const [menusByType, setMenusByType] = useState({})
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -47,6 +49,8 @@ export default function Menus() {
   const [showEdit, setShowEdit] = useState(false)
   const [editMenu, setEditMenu] = useState(null)
   const [editItems, setEditItems] = useState([])
+  const [editingItemId, setEditingItemId] = useState(null)
+  const [editingItemQty, setEditingItemQty] = useState(1)
 
   const datesWithMenus = useMemo(() => {
     const set = new Set()
@@ -55,26 +59,46 @@ export default function Menus() {
   }, [allMenus])
 
   const loadFoods = useCallback(async () => {
+    if (!accessToken) return
     try {
       const foods = await foodService.getAllItems()
       const map = {}
       foods.forEach((f) => (map[f.id] = f))
       setFoodMap(map)
     } catch (e) {
-      console.error(e)
+      console.error('Failed to load foods:', e)
     }
-  }, [])
+  }, [accessToken])
 
   const loadAllMenus = useCallback(async () => {
+    if (!accessToken) return
     try {
       const menus = await menuService.getAll()
       setAllMenus(menus)
     } catch (e) {
-      console.error(e)
+      console.error('Failed to load all menus:', e)
     }
-  }, [])
+  }, [accessToken])
+
+  useEffect(() => {
+    if (accessToken) {
+      loadFoods()
+      loadAllMenus()
+    }
+  }, [accessToken, loadFoods, loadAllMenus])
+
+  useEffect(() => {
+    if (accessToken) {
+      loadMenusForDate(currentDate)
+    }
+  }, [currentDate, accessToken, loadMenusForDate])
+
+  const handleDayClick = (dateStr) => {
+    navigate(`/menus?date=${dateStr}`)
+  }
 
   const loadMenusForDate = useCallback(async (dateStr) => {
+    if (!accessToken) return
     setIsLoading(true)
     setError(null)
     try {
@@ -86,24 +110,10 @@ export default function Menus() {
       setMenusByType(grouped)
     } catch (err) {
       setMenusByType({})
-      // if 404 means no menus for date — clear
     } finally {
       setIsLoading(false)
     }
-  }, [])
-
-  useEffect(() => {
-    loadFoods()
-    loadAllMenus()
-  }, [loadFoods, loadAllMenus])
-
-  useEffect(() => {
-    loadMenusForDate(currentDate)
-  }, [currentDate, loadMenusForDate])
-
-  const handleDayClick = (dateStr) => {
-    navigate(`/menus?date=${dateStr}`)
-  }
+  }, [accessToken])
 
   const monthPrev = () => setCalendarMonth((d) => new Date(d.getFullYear(), d.getMonth() - 1, 1))
   const monthNext = () => setCalendarMonth((d) => new Date(d.getFullYear(), d.getMonth() + 1, 1))
@@ -137,33 +147,6 @@ export default function Menus() {
   const handleRemoveEditItemRow = (idx) => setEditItems((s) => s.filter((_, i) => i !== idx))
   const handleUpdateEditItem = (idx, key, value) =>
     setEditItems((s) => s.map((r, i) => (i === idx ? { ...r, [key]: value } : r)))
-
-  const openEditModal = (menu) => {
-    setEditMenu(menu)
-    setEditItems(menu.items.map((item) => ({ food_id: item.food_id, quantity: item.quantity, id: item.id })))
-    setShowEdit(true)
-  }
-
-  const handleEditMenu = async () => {
-    try {
-      setError(null)
-      const payload = {
-        items: editItems
-          .filter((it) => it.food_id || it.name)
-          .map((it) => ({ food_id: it.food_id || null, quantity: Number(it.quantity) || 1 }))
-      }
-
-      await menuService.updateMenu(editMenu.id, payload.items)
-      setShowEdit(false)
-      setEditMenu(null)
-      setEditItems([])
-      // reload
-      loadMenusForDate(currentDate)
-      loadAllMenus()
-    } catch (e) {
-      setError(e.message || 'Failed to edit menu')
-    }
-  }
 
   const handleCreateMenu = async () => {
     try {
@@ -216,6 +199,37 @@ export default function Menus() {
       }))
     } catch (err) {
       setError(err.message || 'Failed to allocate item')
+    }
+  }
+
+  const handleDeleteItem = async (menu, itemId) => {
+    try {
+      setError(null)
+      const updatedItems = menu.items.filter((item) => item.id !== itemId)
+      const updatedMenu = await menuService.updateMenu(menu.id, updatedItems)
+      setMenusByType((prev) => ({
+        ...prev,
+        [updatedMenu.type]: updatedMenu
+      }))
+    } catch (err) {
+      setError(err.message || 'Failed to delete item')
+    }
+  }
+
+  const handleEditItemQty = async (menu, item) => {
+    try {
+      setError(null)
+      const updatedItems = menu.items.map((i) =>
+        i.id === item.id ? { ...i, quantity: editingItemQty } : i
+      )
+      const updatedMenu = await menuService.updateMenu(menu.id, updatedItems)
+      setMenusByType((prev) => ({
+        ...prev,
+        [updatedMenu.type]: updatedMenu
+      }))
+      setEditingItemId(null)
+    } catch (err) {
+      setError(err.message || 'Failed to update item quantity')
     }
   }
 
@@ -310,78 +324,138 @@ export default function Menus() {
               const menu = menusByType[mealType]
               if (!menu) return null
 
-              const hasAllocatedItems = menu.items.some((item) => item.allocated)
-
               return (
                 <section key={mealType} className="bg-white rounded-lg shadow p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-semibold text-gray-800">{mealType}</h2>
-                    <button
-                      className={`px-3 py-1 text-sm border rounded transition ${
-                        hasAllocatedItems
-                          ? 'bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed'
-                          : 'hover:bg-gray-50'
-                      }`}
-                      onClick={() => !hasAllocatedItems && openEditModal(menu)}
-                      disabled={hasAllocatedItems}
-                      title={hasAllocatedItems ? 'Cannot edit menu with allocated items' : 'Edit menu'}
-                    >
-                      ✎ Edit
-                    </button>
-                  </div>
+                  <h2 className="text-xl font-semibold text-gray-800 mb-4">{mealType}</h2>
 
-                  <div className="space-y-2">
-                    {menu.items.map((item) => {
-                      const displayName = item.name || foodMap[item.food_id]?.name || 'Unknown'
+                  {menu.items.length === 0 ? (
+                    <div className="text-center text-gray-500 text-sm p-4">No items for this menu</div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead className="bg-gray-50 border-b">
+                          <tr>
+                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Item Name</th>
+                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Type</th>
+                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Quantity</th>
+                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Status</th>
+                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {menu.items.map((item) => {
+                            const displayName = item.name || foodMap[item.food_id]?.name || 'Unknown'
+                            const isEditing = editingItemId === item.id
 
-                      return (
-                        <div key={item.id} className={`rounded-lg p-3 border-l-4 transition ${
-                          item.allocated
-                            ? 'bg-green-50 border-l-green-500'
-                            : 'bg-blue-50 border-l-blue-500'
-                        }`}>
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-3">
-                                <div className="font-semibold text-gray-900">{displayName}</div>
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-white border border-gray-200 text-gray-700">
-                                  Qty: {item.quantity}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="flex gap-2 ml-4 flex-shrink-0">
-                              <button
-                                type="button"
-                                className={`p-1.5 rounded-full transition ${
-                                  item.allocated
-                                    ? 'bg-green-200 text-green-700'
-                                    : 'bg-white border border-gray-300 text-gray-700 hover:bg-green-100 hover:border-green-300 hover:text-green-700'
-                                }`}
-                                onClick={() => handleAllocate(menu, item)}
-                                disabled={item.allocated}
-                                title="Allocate"
-                              >
-                                ✓
-                              </button>
-                              <button
-                                type="button"
-                                className={`p-1.5 rounded-full transition ${
-                                  item.allocated
-                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                    : 'bg-white border border-gray-300 text-gray-700 hover:bg-blue-100 hover:border-blue-300 hover:text-blue-700'
-                                }`}
-                                onClick={() => handleSubstitute(menu, item, displayName)}
-                                disabled={item.allocated}
-                                title="Substitute"
-                              >
-                                🔁
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
+                            return (
+                              <tr key={item.id} className={`border-b transition ${item.allocated ? 'bg-green-50' : 'hover:bg-gray-50'}`}>
+                                <td className="px-4 py-3 text-sm text-gray-900 font-medium">{displayName}</td>
+                                <td className="px-4 py-3 text-sm text-gray-600">{mealType}</td>
+                                <td className="px-4 py-3 text-sm">
+                                  {isEditing ? (
+                                    <input
+                                      type="number"
+                                      min="1"
+                                      className="w-16 border rounded px-2 py-1"
+                                      value={editingItemQty}
+                                      onChange={(e) => setEditingItemQty(Number(e.target.value))}
+                                    />
+                                  ) : (
+                                    <span className="text-gray-600">{item.quantity}</span>
+                                  )}
+                                </td>
+                                <td className="px-4 py-3 text-sm">
+                                  <span className={`inline-block px-3 py-1 rounded text-white text-xs font-medium ${
+                                    item.allocated ? 'bg-green-600' : 'bg-blue-600'
+                                  }`}>
+                                    {item.allocated ? 'Allocated' : 'Pending'}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3 text-sm space-x-2 flex items-center">
+                                  {isEditing ? (
+                                    <>
+                                      <button
+                                        onClick={() => handleEditItemQty(menu, item)}
+                                        className="text-green-600 hover:text-green-800 text-lg"
+                                        title="Save"
+                                      >
+                                        ✓
+                                      </button>
+                                      <button
+                                        onClick={() => setEditingItemId(null)}
+                                        className="text-gray-600 hover:text-gray-800 text-lg"
+                                        title="Cancel"
+                                      >
+                                        ✕
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <button
+                                        onClick={() => handleAllocate(menu, item)}
+                                        disabled={item.allocated}
+                                        className={`text-lg transition ${
+                                          item.allocated
+                                            ? 'text-gray-400 cursor-not-allowed'
+                                            : 'text-gray-600 hover:text-blue-600'
+                                        }`}
+                                        title="Allocate"
+                                      >
+                                        📦
+                                      </button>
+                                      <button
+                                        onClick={() => handleSubstitute(menu, item, displayName)}
+                                        disabled={item.allocated}
+                                        className={`text-lg transition ${
+                                          item.allocated
+                                            ? 'text-gray-400 cursor-not-allowed'
+                                            : 'text-gray-600 hover:text-blue-600'
+                                        }`}
+                                        title="Substitute"
+                                      >
+                                        🔁
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          setEditingItemId(item.id)
+                                          setEditingItemQty(item.quantity)
+                                        }}
+                                        disabled={item.allocated}
+                                        className={`text-lg transition ${
+                                          item.allocated
+                                            ? 'text-gray-400 cursor-not-allowed'
+                                            : 'text-gray-600 hover:text-blue-600'
+                                        }`}
+                                        title="Edit quantity"
+                                      >
+                                        ✏️
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          if (window.confirm('Delete this item?')) {
+                                            handleDeleteItem(menu, item.id)
+                                          }
+                                        }}
+                                        disabled={item.allocated}
+                                        className={`text-lg transition ${
+                                          item.allocated
+                                            ? 'text-gray-400 cursor-not-allowed'
+                                            : 'text-gray-600 hover:text-red-600'
+                                        }`}
+                                        title="Delete"
+                                      >
+                                        🗑️
+                                      </button>
+                                    </>
+                                  )}
+                                </td>
+                              </tr>
+                            )
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </section>
               )
             })}
