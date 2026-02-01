@@ -246,6 +246,23 @@ export default function Menus() {
     navigate(`/menus/sub?${params.toString()}`)
   }
 
+  const handleEditMenu = async () => {
+    try {
+      setError(null)
+      const updatedMenu = await menuService.updateMenu(editMenu.id, editItems)
+      setMenusByType((prev) => ({
+        ...prev,
+        [updatedMenu.type]: updatedMenu
+      }))
+      setShowEdit(false)
+      setEditMenu(null)
+      setEditItems([])
+      loadAllMenus()
+    } catch (err) {
+      setError(err.message || 'Failed to update menu')
+    }
+  }
+
   const monthGrid = buildMonthGrid(calendarMonth)
 
   return (

@@ -56,8 +56,11 @@ export default function Dashboard() {
       }
     }
     
-    loadFood()
-    loadUpcomingMenus()
+    // Only load data if we have a valid token
+    if (accessToken) {
+      loadFood()
+      loadUpcomingMenus()
+    }
   }, [accessToken, navigate, fetchItems])
 
   // Get items with quantity <= 5
@@ -110,8 +113,8 @@ export default function Dashboard() {
           </button>
 
           <button
-            className="p-6 bg-white rounded-lg shadow hover:shadow-md transition-shadow text-left opacity-50 cursor-not-allowed"
-            disabled
+            onClick={() => navigate('/groups')}
+            className="p-6 bg-white rounded-lg shadow hover:shadow-md transition-shadow text-left"
           >
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -121,7 +124,7 @@ export default function Dashboard() {
               </div>
               <div className="ml-4">
                 <h3 className="text-lg font-semibold text-gray-900">Groups</h3>
-                <p className="text-sm text-gray-500">Coming soon</p>
+                <p className="text-sm text-gray-500">Manage teams</p>
               </div>
             </div>
           </button>

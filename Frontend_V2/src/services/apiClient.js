@@ -12,7 +12,13 @@ const apiClient = axios.create({
 // Request interceptor: Add authorization header
 apiClient.interceptors.request.use(
   (config) => {
-    const token = useAuthStore.getState().accessToken
+    let token = useAuthStore.getState().accessToken
+    
+    // If no token in store, check localStorage directly
+    if (!token) {
+      token = localStorage.getItem('accessToken')
+    }
+    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
