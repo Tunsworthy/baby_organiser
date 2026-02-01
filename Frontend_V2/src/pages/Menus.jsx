@@ -40,10 +40,11 @@ export default function Menus() {
   const menusByDate = useMemo(() => {
     const map = {}
     allMenus.forEach((m) => {
-      if (!map[m.date]) {
-        map[m.date] = new Set()
+      const dateKey = toDateString(new Date(m.date))
+      if (!map[dateKey]) {
+        map[dateKey] = new Set()
       }
-      map[m.date].add(m.type)
+      map[dateKey].add(m.type)
     })
     return map
   }, [allMenus])
@@ -234,6 +235,20 @@ export default function Menus() {
     navigate(`/menus/sub?${params.toString()}`)
   }
 
+  const handleOpenEditMenu = (menu) => {
+    setEditMenu(menu)
+    const initialItems = menu.items?.length
+      ? menu.items.map((item) => ({
+          id: item.id,
+          food_id: item.food_id || '',
+          quantity: item.quantity || 1,
+          allocated: item.allocated
+        }))
+      : [{ food_id: '', quantity: 1 }]
+    editItems.setItems(initialItems)
+    setShowEdit(true)
+  }
+
   const handleEditMenu = async () => {
     try {
       setError(null)
@@ -338,7 +353,16 @@ export default function Menus() {
 
               return (
                 <section key={mealType} className="bg-white rounded-lg shadow p-6">
-                  <h2 className="text-xl font-semibold text-gray-800 mb-4">{mealType}</h2>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-semibold text-gray-800">{mealType}</h2>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenEditMenu(menu)}
+                      className="px-3 py-1.5 text-sm rounded border bg-white hover:bg-gray-50"
+                    >
+                      + Add Item
+                    </button>
+                  </div>
 
                   {menu.items.length === 0 ? (
                     <div className="text-center text-gray-500 text-sm p-4">No items for this menu</div>
@@ -359,12 +383,13 @@ export default function Menus() {
                           <tbody>
                             {menu.items.map((item) => {
                               const displayName = item.name || foodMap[item.food_id]?.name || 'Unknown'
+                              const foodType = item.type || foodMap[item.food_id]?.type || 'Other'
                               const isEditing = editingItemId === item.id
 
                               return (
                                 <tr key={item.id} className={`border-b transition ${item.allocated ? 'bg-green-50' : 'hover:bg-gray-50'}`}>
                                   <td className="px-4 py-3 text-sm text-center text-gray-900 font-medium">{displayName}</td>
-                                  <td className="px-4 py-3 text-sm text-center text-gray-600">{mealType}</td>
+                                  <td className="px-4 py-3 text-sm text-center text-gray-600">{foodType}</td>
                                   <td className="px-4 py-3 text-sm text-center">
                                     {isEditing ? (
                                       <input
@@ -458,14 +483,17 @@ export default function Menus() {
                       <div className="md:hidden space-y-3">
                         {menu.items.map((item) => {
                           const displayName = item.name || foodMap[item.food_id]?.name || 'Unknown'
+                          const foodType = item.type || foodMap[item.food_id]?.type || 'Other'
                           const isEditing = editingItemId === item.id
 
                           return (
                             <div key={item.id} className={`p-4 rounded-lg border-2 transition ${item.allocated ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
                               <div className="flex items-start justify-between mb-3">
                                 <div className="flex-1">
-                                  <h3 className="font-semibold text-gray-900">{displayName}</h3>
-                                  <p className="text-sm text-gray-600">{mealType}</p>
+                                  <h3 className="font-semibold text-gray-900">
+                                    {displayName}
+                                    <span className="ml-2 text-sm italic text-gray-500">- {foodType}</span>
+                                  </h3>
                                 </div>
                                 <span className={`inline-block px-2 py-1 rounded text-white text-xs font-medium ${
                                   item.allocated ? 'bg-green-600' : 'bg-blue-600'
@@ -474,18 +502,18 @@ export default function Menus() {
                                 </span>
                               </div>
 
-                              <div className="mb-3">
-                                <label className="text-xs text-gray-600 block mb-1">Quantity</label>
+                              <div className="flex items-center gap-2 mb-3">
+                                <span className="text-sm text-gray-600 font-medium">QTY:</span>
                                 {isEditing ? (
                                   <input
                                     type="number"
                                     min="1"
-                                    className="w-full border rounded px-2 py-1"
+                                    className="w-24 border rounded px-2 py-1"
                                     value={editingItemQty}
                                     onChange={(e) => setEditingItemQty(Number(e.target.value))}
                                   />
                                 ) : (
-                                  <span className="text-lg font-medium text-gray-900">{item.quantity}</span>
+                                  <span className="text-gray-900 font-semibold">{item.quantity}</span>
                                 )}
                               </div>
 
