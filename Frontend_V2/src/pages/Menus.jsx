@@ -22,8 +22,7 @@ export default function Menus() {
   const [foodMap, setFoodMap] = useState({})
   const [allMenus, setAllMenus] = useState([])
   const [children, setChildren] = useState([])
-  const [selectedChildId, setSelectedChildId] = useState('')
-  const [filterChildId, setFilterChildId] = useState('all')
+  const [filterChildId, setFilterChildId] = useState(null)
 
   const currentDate = useMemo(() => {
     return searchParams.get('date') || new Date().toISOString().split('T')[0]
@@ -33,6 +32,7 @@ export default function Menus() {
   const [createMeal, setCreateMeal] = useState('Lunch')
   const [showCreate, setShowCreate] = useState(false)
   const [showEdit, setShowEdit] = useState(false)
+  const [showNoChildrenPrompt, setShowNoChildrenPrompt] = useState(false)
   const [editMenu, setEditMenu] = useState(null)
   const [editMode, setEditMode] = useState('edit')
   const [editingItemId, setEditingItemId] = useState(null)
@@ -45,8 +45,8 @@ export default function Menus() {
   const menusByDate = useMemo(() => {
     const map = {}
     allMenus.forEach((m) => {
-      // Filter by selected child if filterChildId is set
-      if (filterChildId === 'all' || !filterChildId || m.childId === Number(filterChildId)) {
+      // Filter by selected child
+      if (filterChildId && m.childId === filterChildId) {
         const dateKey = toDateString(new Date(m.date))
         if (!map[dateKey]) {
           map[dateKey] = new Set()
@@ -74,13 +74,18 @@ export default function Menus() {
     try {
       const kids = await childService.getAll()
       setChildren(kids)
-      if (kids.length > 0 && !selectedChildId) {
-        setSelectedChildId(kids[0].id.toString())
+      // Show prompt if no children exist
+      if (kids.length === 0) {
+        setShowNoChildrenPrompt(true)
+      } else {
+        setShowNoChildrenPrompt(false)
+        // Set first child as default
+        setFilterChildId(kids[0].id)
       }
     } catch (e) {
       console.error('Failed to load children:', e)
     }
-  }, [accessToken, selectedChildId])
+  }, [accessToken])
 
   const loadAllMenus = useCallback(async () => {
     if (!accessToken) return
@@ -100,8 +105,8 @@ export default function Menus() {
       const menus = await menuService.getByDate(dateStr)
       const grouped = {}
       menus.forEach((menu) => {
-        // Filter by selected child if filterChildId is set
-        if (filterChildId === 'all' || !filterChildId || menu.childId === Number(filterChildId)) {
+        // Filter by selected child
+        if (filterChildId && menu.childId === filterChildId) {
           grouped[menu.type] = menu
         }
       })
@@ -300,33 +305,61 @@ export default function Menus() {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
 
+      {/* No children prompt */}
+      {showNoChildrenPrompt && (
+        <Modal isOpen={true} title="No Children in Group" onClose={() => {}} showCloseButton={false}>
+          <div className="space-y-4">
+            <p className="text-gray-700">
+              You don't have any children in your group yet. Please create a child to get started with menus.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => navigate('/groups')}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Go to Groups
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
       <main className="max-w-6xl mx-auto px-4 py-8 space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Menus</h1>
             <p className="text-gray-600 mt-1">{formatDisplayDate(currentDate)}</p>
           </div>
-          <div className="flex gap-2 items-center">
-            {children.length > 0 && (
-              <select 
-                value={filterChildId} 
-                onChange={(e) => setFilterChildId(e.target.value)} 
-                className="px-3 py-2 border rounded bg-white text-sm"
-              >
-                <option value="all">All Children</option>
-                {children.map((child) => (
-                  <option key={child.id} value={child.id}>{child.name}</option>
-                ))}
-              </select>
-            )}
+          {children.length > 0 && (
             <button className="px-3 py-2 rounded border bg-white" onClick={() => setShowCreate(true)}>
               + Create Menu
             </button>
-          </div>
+          )}
         </div>
 
-        {/* Calendar */}
-        <section className="bg-white rounded-lg shadow p-6 max-w-md mx-auto">
+        {children.length > 0 ? (
+          <>
+            {/* Child selector bar */}
+            <div className="bg-white rounded-lg shadow p-4">
+              <div className="flex gap-2 flex-wrap">
+                {children.map((child) => (
+                  <button
+                    key={child.id}
+                    onClick={() => setFilterChildId(child.id)}
+                    className={`px-4 py-2 rounded-full font-medium transition ${
+                      filterChildId === child.id
+                        ? 'bg-blue-600 text-white shadow-md'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {child.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Calendar */}
+            <section className="bg-white rounded-lg shadow p-6 max-w-md mx-auto">
           <div className="flex items-center justify-between mb-3">
             <div className="text-lg font-semibold">{calendarMonth.toLocaleString(undefined, { month: 'long', year: 'numeric' })}</div>
             <div className="flex gap-2">
@@ -377,24 +410,23 @@ export default function Menus() {
               })
             ))}
           </div>
-        </section>
+            </section>
 
-        {error && (
-          <ErrorAlert message={error} onDismiss={() => setError(null)} />
-        )}
+            {error && (
+              <ErrorAlert message={error} onDismiss={() => setError(null)} />
+            )}
+            {isLoading ? (
+              <div className="text-center py-12">Loading menus...</div>
+            ) : (
+              <div className="space-y-4">
+                {MEAL_TYPES.map((mealType) => {
+                  const menu = menusByType[mealType]
+                  if (!menu) return null
 
-        {isLoading ? (
-          <div className="text-center py-12">Loading menus...</div>
-        ) : (
-          <div className="space-y-4">
-            {MEAL_TYPES.map((mealType) => {
-              const menu = menusByType[mealType]
-              if (!menu) return null
-
-              return (
-                <section key={mealType} className="bg-white rounded-lg shadow p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-semibold text-gray-800">{mealType}</h2>
+                  return (
+                    <section key={mealType} className="bg-white rounded-lg shadow p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-xl font-semibold text-gray-800">{mealType}</h2>
                     <button
                       type="button"
                       onClick={() => handleAddItemToMenu(menu)}
@@ -652,6 +684,12 @@ export default function Menus() {
                 <button className="px-4 py-2 rounded border bg-white" onClick={() => setShowCreate(true)}>Create Menu</button>
               </div>
             )}
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="text-center py-12 text-gray-600">
+            Please add children to your group to create menus.
           </div>
         )}
 
