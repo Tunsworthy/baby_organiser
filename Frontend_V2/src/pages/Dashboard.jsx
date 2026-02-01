@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { useFoodStore } from '../store/foodStore'
+import { menuService } from '../services/menuService'
 import Navbar from '../components/Navbar'
 
 export default function Dashboard() {
@@ -10,6 +11,8 @@ export default function Dashboard() {
   const accessToken = useAuthStore((state) => state.accessToken)
   const { items: foodItems, fetchItems } = useFoodStore()
   const [isLoadingFood, setIsLoadingFood] = useState(false)
+  const [upcomingMenus, setUpcomingMenus] = useState([])
+  const [isLoadingMenus, setIsLoadingMenus] = useState(false)
 
   useEffect(() => {
     if (!accessToken) {
@@ -28,7 +31,33 @@ export default function Dashboard() {
       }
     }
     
+    const loadUpcomingMenus = async () => {
+      setIsLoadingMenus(true)
+      try {
+        const allMenus = await menuService.getAll()
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        
+        // Filter menus from today onwards and sort by date
+        const upcoming = allMenus
+          .filter(menu => {
+            const menuDate = new Date(menu.date)
+            menuDate.setHours(0, 0, 0, 0)
+            return menuDate >= today
+          })
+          .sort((a, b) => new Date(a.date) - new Date(b.date))
+          .slice(0, 5) // Get next 5 menus
+        
+        setUpcomingMenus(upcoming)
+      } catch (err) {
+        console.error('Failed to load menus:', err)
+      } finally {
+        setIsLoadingMenus(false)
+      }
+    }
+    
     loadFood()
+    loadUpcomingMenus()
   }, [accessToken, navigate, fetchItems])
 
   // Get items with quantity <= 5
@@ -44,94 +73,8 @@ export default function Dashboard() {
           Welcome back, {user?.firstName || 'User'}!
         </h1>
 
-        {/* Grid Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Upcoming Menus Card */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-gray-800">Upcoming Menus</h2>
-              <button
-                onClick={() => navigate('/menus')}
-                className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-              >
-                View All →
-              </button>
-            </div>
-            <div className="space-y-3">
-              {/* Placeholder for upcoming menus */}
-              <div className="p-4 bg-gray-50 rounded-md border border-gray-200">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className="font-medium text-gray-700">Today - Lunch</p>
-                    <p className="text-sm text-gray-500">Menu details will appear here</p>
-                  </div>
-                  <svg className="h-5 w-5 text-gray-400" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                    <path d="M9 5l7 7-7 7" />
-                  </svg>
-                </div>
-              </div>
-              <div className="p-4 bg-gray-50 rounded-md border border-gray-200">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className="font-medium text-gray-700">Today - Dinner</p>
-                    <p className="text-sm text-gray-500">Menu details will appear here</p>
-                  </div>
-                  <svg className="h-5 w-5 text-gray-400" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                    <path d="M9 5l7 7-7 7" />
-                  </svg>
-                </div>
-              </div>
-              <div className="p-4 bg-gray-50 rounded-md border border-gray-200">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className="font-medium text-gray-700">Tomorrow - Lunch</p>
-                    <p className="text-sm text-gray-500">Menu details will appear here</p>
-                  </div>
-                  <svg className="h-5 w-5 text-gray-400" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                    <path d="M9 5l7 7-7 7" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Low Food Alert Card */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-gray-800">Low Food Alert</h2>
-              <button
-                onClick={() => navigate('/inventory')}
-                className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-              >
-                Manage Inventory →
-              </button>
-            </div>
-            <div className="space-y-3">
-              {isLoadingFood ? (
-                <div className="text-center py-8 text-gray-500">Loading inventory...</div>
-              ) : lowStockItems.length > 0 ? (
-                lowStockItems.map((item) => (
-                  <div key={item.id} className="flex items-start p-3 bg-amber-50 rounded-md border border-amber-200">
-                    <svg className="h-5 w-5 text-amber-500 mt-0.5 mr-3" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                      <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                    <div className="flex-1">
-                      <p className="font-medium text-gray-800">{item.name}</p>
-                      <p className="text-sm text-gray-600">Only {item.quantity} {item.unit || 'items'} remaining</p>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="p-4 text-center text-green-600 text-sm bg-green-50 rounded-md border border-green-200">
-                  ✓ All items are well stocked!
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
         {/* Quick Actions */}
-        <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="mb-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
           <button
             onClick={() => navigate('/inventory')}
             className="p-6 bg-white rounded-lg shadow hover:shadow-md transition-shadow text-left"
@@ -182,6 +125,100 @@ export default function Dashboard() {
               </div>
             </div>
           </button>
+        </div>
+
+        {/* Grid Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Upcoming Menus Card */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-gray-800">Upcoming Menus</h2>
+              <button
+                onClick={() => navigate('/menus')}
+                className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+              >
+                View All →
+              </button>
+            </div>
+            <div className="space-y-3">
+              {isLoadingMenus ? (
+                <div className="text-center py-8 text-gray-500">Loading menus...</div>
+              ) : upcomingMenus.length > 0 ? (
+                upcomingMenus.map((menu) => {
+                  const menuDate = new Date(menu.date)
+                  const today = new Date()
+                  today.setHours(0, 0, 0, 0)
+                  menuDate.setHours(0, 0, 0, 0)
+                  
+                  const isToday = menuDate.getTime() === today.getTime()
+                  const isTomorrow = menuDate.getTime() === today.getTime() + 86400000
+                  
+                  let dateLabel = menuDate.toLocaleDateString()
+                  if (isToday) dateLabel = 'Today'
+                  else if (isTomorrow) dateLabel = 'Tomorrow'
+                  
+                  return (
+                    <div 
+                      key={menu.id} 
+                      className="p-4 bg-gray-50 rounded-md border border-gray-200 hover:bg-gray-100 cursor-pointer transition"
+                      onClick={() => navigate(`/menus?date=${menu.date}`)}
+                    >
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-medium text-gray-700">{dateLabel} - {menu.type}</p>
+                          <p className="text-sm text-gray-500">
+                            {menu.items.length} item{menu.items.length !== 1 ? 's' : ''}
+                            {menu.items.length > 0 && ` - ${menu.items.slice(0, 2).map(i => i.name).join(', ')}${menu.items.length > 2 ? '...' : ''}`}
+                          </p>
+                        </div>
+                        <svg className="h-5 w-5 text-gray-400" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                          <path d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
+                    </div>
+                  )
+                })
+              ) : (
+                <div className="p-4 text-center text-gray-500 text-sm bg-gray-50 rounded-md border border-gray-200">
+                  No upcoming menus. Create one to get started!
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Low Food Alert Card */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-gray-800">Low Food Alert</h2>
+              <button
+                onClick={() => navigate('/inventory')}
+                className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+              >
+                Manage Inventory →
+              </button>
+            </div>
+            <div className="space-y-3">
+              {isLoadingFood ? (
+                <div className="text-center py-8 text-gray-500">Loading inventory...</div>
+              ) : lowStockItems.length > 0 ? (
+                lowStockItems.map((item) => (
+                  <div key={item.id} className="flex items-start p-3 bg-amber-50 rounded-md border border-amber-200">
+                    <svg className="h-5 w-5 text-amber-500 mt-0.5 mr-3" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                      <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-800">{item.name}</p>
+                      <p className="text-sm text-gray-600">Only {item.quantity} {item.unit || 'items'} remaining</p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="p-4 text-center text-green-600 text-sm bg-green-50 rounded-md border border-green-200">
+                  ✓ All items are well stocked!
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

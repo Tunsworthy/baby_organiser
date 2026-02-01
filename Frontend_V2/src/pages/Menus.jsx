@@ -275,7 +275,7 @@ export default function Menus() {
                 const hasMenu = datesWithMenus.has(ds)
                 const isSelected = ds === currentDate
                 return (
-                  <div key={ds} className="flex flex-col items-center">
+                  <div key={ds} className="flex flex-col items-center py-1">
                     <button
                       onClick={() => handleDayClick(ds)}
                       className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition ${
@@ -288,7 +288,9 @@ export default function Menus() {
                     >
                       {day.getDate()}
                     </button>
-                    {hasMenu && <div className="w-1.5 h-1.5 bg-green-500 rounded-full mt-1" />}
+                    <div className="h-2 flex items-center justify-center mt-0.5">
+                      {hasMenu && <div className="w-2 h-2 bg-green-500 rounded-full" />}
+                    </div>
                   </div>
                 )
               })
