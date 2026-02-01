@@ -16,9 +16,12 @@ export const useAuthStore = create((set) => ({
     set({ isLoading: true, error: null })
     try {
       const data = await apiClient.post('/api/auth/login', { email, password })
+      const { user, accessToken } = data.data
+      localStorage.setItem('accessToken', accessToken)
+      localStorage.setItem('user', JSON.stringify(user))
       set({
-        user: data.data.user,
-        accessToken: data.data.accessToken,
+        user,
+        accessToken,
         isLoading: false
       })
       return data.data
@@ -32,9 +35,12 @@ export const useAuthStore = create((set) => ({
     set({ isLoading: true, error: null })
     try {
       const data = await apiClient.post('/api/auth/register', { email, password, firstName, lastName })
+      const { user, accessToken } = data.data
+      localStorage.setItem('accessToken', accessToken)
+      localStorage.setItem('user', JSON.stringify(user))
       set({
-        user: data.data.user,
-        accessToken: data.data.accessToken,
+        user,
+        accessToken,
         isLoading: false
       })
       return data.data
@@ -44,12 +50,23 @@ export const useAuthStore = create((set) => ({
     }
   },
 
-  logout: () => set({ user: null, accessToken: null, error: null }),
+  logout: () => {
+    localStorage.removeItem('accessToken')
+    localStorage.removeItem('user')
+    set({ user: null, accessToken: null, error: null })
+  },
 
   checkAuth: async () => {
     const token = localStorage.getItem('accessToken')
-    if (token) {
-      set({ accessToken: token })
+    const userStr = localStorage.getItem('user')
+    if (token && userStr) {
+      try {
+        const user = JSON.parse(userStr)
+        set({ accessToken: token, user })
+      } catch (e) {
+        console.error('Failed to parse user from localStorage', e)
+        localStorage.removeItem('user')
+      }
     }
   }
 }))
