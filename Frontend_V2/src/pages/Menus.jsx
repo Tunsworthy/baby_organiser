@@ -173,7 +173,7 @@ export default function Menus() {
       const payload = {
         date: currentDate,
         type: createMeal,
-        childId: selectedChildId && selectedChildId !== '' ? Number(selectedChildId) : null,
+        childId: filterChildId,
         items: createItems.items
           .filter((it) => it.food_id || it.name)
           .map((it) => ({ food_id: it.food_id || null, quantity: Number(it.quantity) || 1 }))
@@ -706,7 +706,7 @@ export default function Menus() {
             {children.length > 0 && (
               <div className="flex gap-3 items-center">
                 <label className="font-medium">Child:</label>
-                <select value={selectedChildId} onChange={(e) => setSelectedChildId(e.target.value)} className="border rounded px-2 py-1">
+                <select value={filterChildId || ''} onChange={(e) => setFilterChildId(e.target.value ? Number(e.target.value) : null)} className="border rounded px-2 py-1">
                   <option value="">-- No child --</option>
                   {children.map((child) => (
                     <option key={child.id} value={child.id}>{child.name}</option>
