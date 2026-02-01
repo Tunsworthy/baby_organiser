@@ -252,7 +252,7 @@ export default function Menus() {
         </div>
 
         {/* Calendar */}
-        <section className="bg-white rounded-lg shadow p-6">
+        <section className="bg-white rounded-lg shadow p-6 max-w-md mx-auto">
           <div className="flex items-center justify-between mb-3">
             <div className="text-lg font-semibold">{calendarMonth.toLocaleString(undefined, { month: 'long', year: 'numeric' })}</div>
             <div className="flex gap-2">
@@ -267,7 +267,7 @@ export default function Menus() {
             ))}
           </div>
 
-          <div className="grid grid-cols-7 gap-0">
+          <div className="grid grid-cols-7 gap-1">
             {monthGrid.map((week, wi) => (
               week.map((day) => {
                 const ds = toDateString(day)
