@@ -232,23 +232,29 @@ export default function Menus() {
             ))}
           </div>
 
-          <div className="grid grid-cols-7 gap-2 mt-2">
+          <div className="grid grid-cols-7 gap-3 mt-4">
             {monthGrid.map((week, wi) => (
               week.map((day) => {
                 const ds = toDateString(day)
                 const isCurrentMonth = day.getMonth() === calendarMonth.getMonth()
                 const hasMenu = datesWithMenus.has(ds)
+                const isSelected = ds === currentDate
                 return (
-                  <button
-                    key={ds}
-                    onClick={() => handleDayClick(ds)}
-                    className={`p-2 h-20 border rounded flex flex-col justify-between items-center ${isCurrentMonth ? 'bg-white' : 'bg-gray-50'}`}
-                  >
-                    <div className={`text-sm ${ds === currentDate ? 'font-bold' : ''}`}>{day.getDate()}</div>
-                    <div className="h-2">
-                      {hasMenu && <div className="w-2 h-2 bg-green-500 rounded-full" />}
-                    </div>
-                  </button>
+                  <div key={ds} className="flex flex-col items-center">
+                    <button
+                      onClick={() => handleDayClick(ds)}
+                      className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition ${
+                        isSelected
+                          ? 'bg-blue-600 text-white'
+                          : isCurrentMonth
+                          ? 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                          : 'bg-gray-50 text-gray-400'
+                      }`}
+                    >
+                      {day.getDate()}
+                    </button>
+                    {hasMenu && <div className="w-1.5 h-1.5 bg-green-500 rounded-full mt-1" />}
+                  </div>
                 )
               })
             ))}
