@@ -333,7 +333,7 @@ export default function Menus() {
                       const displayName = item.name || foodMap[item.food_id]?.name || 'Unknown'
 
                       return (
-                        <div key={item.id} className={`rounded-lg p-4 border-l-4 transition ${
+                        <div key={item.id} className={`rounded-lg p-3 border-l-4 transition ${
                           item.allocated
                             ? 'bg-green-50 border-l-green-500'
                             : 'bg-blue-50 border-l-blue-500'
@@ -341,23 +341,16 @@ export default function Menus() {
                           <div className="flex items-center justify-between">
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-3">
-                                <div className="font-semibold text-gray-900 text-lg">{displayName}</div>
-                                <div className="flex gap-2">
-                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-white border border-gray-200 text-gray-700">
-                                    Qty: {item.quantity}
-                                  </span>
-                                  {item.allocated && (
-                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-200 text-green-800">
-                                      ✓ Allocated
-                                    </span>
-                                  )}
-                                </div>
+                                <div className="font-semibold text-gray-900">{displayName}</div>
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-white border border-gray-200 text-gray-700">
+                                  Qty: {item.quantity}
+                                </span>
                               </div>
                             </div>
                             <div className="flex gap-2 ml-4 flex-shrink-0">
                               <button
                                 type="button"
-                                className={`p-2 rounded-full transition ${
+                                className={`p-1.5 rounded-full transition ${
                                   item.allocated
                                     ? 'bg-green-200 text-green-700'
                                     : 'bg-white border border-gray-300 text-gray-700 hover:bg-green-100 hover:border-green-300 hover:text-green-700'
@@ -370,7 +363,7 @@ export default function Menus() {
                               </button>
                               <button
                                 type="button"
-                                className={`p-2 rounded-full transition ${
+                                className={`p-1.5 rounded-full transition ${
                                   item.allocated
                                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                     : 'bg-white border border-gray-300 text-gray-700 hover:bg-blue-100 hover:border-blue-300 hover:text-blue-700'
