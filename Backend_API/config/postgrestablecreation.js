@@ -231,6 +231,20 @@ const alterMenusTableQuery = `
   ALTER TABLE menus ADD COLUMN IF NOT EXISTS groupId INTEGER REFERENCES groups (id) ON DELETE CASCADE;
   ALTER TABLE menus ADD COLUMN IF NOT EXISTS childId INTEGER REFERENCES children (id) ON DELETE CASCADE;
   ALTER TABLE menus ADD COLUMN IF NOT EXISTS createdBy INTEGER REFERENCES users (id) ON DELETE SET NULL;
+  
+  -- Make name nullable and add constraint fix
+  ALTER TABLE menus ALTER COLUMN name DROP NOT NULL;
+  
+  -- Drop old constraint and add new one
+  ALTER TABLE menus DROP CONSTRAINT IF EXISTS menus_date_type_key;
+  DO $$ 
+  BEGIN
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_constraint WHERE conname = 'menus_date_type_childid_unique'
+    ) THEN
+      ALTER TABLE menus ADD CONSTRAINT menus_date_type_childid_unique UNIQUE(date, type, childId, groupId);
+    END IF;
+  END $$;
 `;
 
 // Check if the "menu_items" table exists
