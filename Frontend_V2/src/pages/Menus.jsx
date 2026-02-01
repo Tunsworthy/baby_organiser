@@ -45,14 +45,17 @@ export default function Menus() {
   const menusByDate = useMemo(() => {
     const map = {}
     allMenus.forEach((m) => {
-      const dateKey = toDateString(new Date(m.date))
-      if (!map[dateKey]) {
-        map[dateKey] = new Set()
+      // Filter by selected child if filterChildId is set
+      if (filterChildId === 'all' || !filterChildId || m.childId === Number(filterChildId)) {
+        const dateKey = toDateString(new Date(m.date))
+        if (!map[dateKey]) {
+          map[dateKey] = new Set()
+        }
+        map[dateKey].add(m.type)
       }
-      map[dateKey].add(m.type)
     })
     return map
-  }, [allMenus])
+  }, [allMenus, filterChildId])
 
   const loadFoods = useCallback(async () => {
     if (!accessToken) return
@@ -165,7 +168,7 @@ export default function Menus() {
       const payload = {
         date: currentDate,
         type: createMeal,
-        childId: selectedChildId ? Number(selectedChildId) : null,
+        childId: selectedChildId && selectedChildId !== '' ? Number(selectedChildId) : null,
         items: createItems.items
           .filter((it) => it.food_id || it.name)
           .map((it) => ({ food_id: it.food_id || null, quantity: Number(it.quantity) || 1 }))
