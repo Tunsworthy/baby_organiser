@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { menuService } from '../services/menuService'
 import { foodService } from '../services/foodService'
+import { childService } from '../services/childService'
 import Navbar from '../components/Navbar'
 import ErrorAlert from '../components/ErrorAlert'
 import Modal from '../components/Modal'
@@ -20,6 +21,9 @@ export default function Menus() {
   const [error, setError] = useState(null)
   const [foodMap, setFoodMap] = useState({})
   const [allMenus, setAllMenus] = useState([])
+  const [children, setChildren] = useState([])
+  const [selectedChildId, setSelectedChildId] = useState('')
+  const [filterChildId, setFilterChildId] = useState('all')
 
   const currentDate = useMemo(() => {
     return searchParams.get('date') || new Date().toISOString().split('T')[0]
@@ -62,6 +66,19 @@ export default function Menus() {
     }
   }, [accessToken])
 
+  const loadChildren = useCallback(async () => {
+    if (!accessToken) return
+    try {
+      const kids = await childService.getAll()
+      setChildren(kids)
+      if (kids.length > 0 && !selectedChildId) {
+        setSelectedChildId(kids[0].id.toString())
+      }
+    } catch (e) {
+      console.error('Failed to load children:', e)
+    }
+  }, [accessToken, selectedChildId])
+
   const loadAllMenus = useCallback(async () => {
     if (!accessToken) return
     try {
@@ -80,7 +97,10 @@ export default function Menus() {
       const menus = await menuService.getByDate(dateStr)
       const grouped = {}
       menus.forEach((menu) => {
-        grouped[menu.type] = menu
+        // Filter by selected child if filterChildId is set
+        if (filterChildId === 'all' || !filterChildId || menu.childId === Number(filterChildId)) {
+          grouped[menu.type] = menu
+        }
       })
       setMenusByType(grouped)
     } catch (err) {
@@ -88,14 +108,15 @@ export default function Menus() {
     } finally {
       setIsLoading(false)
     }
-  }, [accessToken])
+  }, [accessToken, filterChildId])
 
   useEffect(() => {
     if (accessToken) {
       loadFoods()
       loadAllMenus()
+      loadChildren()
     }
-  }, [accessToken, loadFoods, loadAllMenus])
+  }, [accessToken, loadFoods, loadAllMenus, loadChildren])
 
   useEffect(() => {
     if (accessToken) {
@@ -144,6 +165,7 @@ export default function Menus() {
       const payload = {
         date: currentDate,
         type: createMeal,
+        childId: selectedChildId ? Number(selectedChildId) : null,
         items: createItems.items
           .filter((it) => it.food_id || it.name)
           .map((it) => ({ food_id: it.food_id || null, quantity: Number(it.quantity) || 1 }))
@@ -281,7 +303,19 @@ export default function Menus() {
             <h1 className="text-3xl font-bold text-gray-900">Menus</h1>
             <p className="text-gray-600 mt-1">{formatDisplayDate(currentDate)}</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
+            {children.length > 0 && (
+              <select 
+                value={filterChildId} 
+                onChange={(e) => setFilterChildId(e.target.value)} 
+                className="px-3 py-2 border rounded bg-white text-sm"
+              >
+                <option value="all">All Children</option>
+                {children.map((child) => (
+                  <option key={child.id} value={child.id}>{child.name}</option>
+                ))}
+              </select>
+            )}
             <button className="px-3 py-2 rounded border bg-white" onClick={() => setShowCreate(true)}>
               + Create Menu
             </button>
@@ -627,6 +661,18 @@ export default function Menus() {
                 {MEAL_TYPES.map(m => <option key={m} value={m}>{m}</option>)}
               </select>
             </div>
+
+            {children.length > 0 && (
+              <div className="flex gap-3 items-center">
+                <label className="font-medium">Child:</label>
+                <select value={selectedChildId} onChange={(e) => setSelectedChildId(e.target.value)} className="border rounded px-2 py-1">
+                  <option value="">-- No child --</option>
+                  {children.map((child) => (
+                    <option key={child.id} value={child.id}>{child.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <div className="space-y-2">
               {createItems.items.map((row, idx) => {

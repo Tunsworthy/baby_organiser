@@ -26,7 +26,6 @@ apiClient.interceptors.request.use(
   },
   (error) => Promise.reject(error)
 )
-//update
 // Response interceptor: Handle 401 and refresh token
 apiClient.interceptors.response.use(
   (response) => response,

@@ -30,7 +30,7 @@ export default function GroupDetails() {
   const [inviteEmail, setInviteEmail] = useState('')
   const [isInvitingMember, setIsInvitingMember] = useState(false)
 
-  const isOwner = group && user && group.user_role === 'owner'
+  const isOwner = group && user && group.user_role?.toLowerCase() === 'owner'
 
   useEffect(() => {
     loadGroupDetails()
