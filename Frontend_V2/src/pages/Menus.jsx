@@ -253,7 +253,7 @@ export default function Menus() {
 
         {/* Calendar */}
         <section className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-3">
             <div className="text-lg font-semibold">{calendarMonth.toLocaleString(undefined, { month: 'long', year: 'numeric' })}</div>
             <div className="flex gap-2">
               <button className="px-3 py-1 border rounded" onClick={monthPrev}>Prev</button>
@@ -261,13 +261,13 @@ export default function Menus() {
             </div>
           </div>
 
-          <div className="grid grid-cols-7 gap-2 text-sm">
+          <div className="grid grid-cols-7 gap-0 text-sm mb-1">
             {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => (
-              <div key={d} className="text-center font-medium text-gray-600">{d}</div>
+              <div key={d} className="text-center font-medium text-gray-600 py-1">{d}</div>
             ))}
           </div>
 
-          <div className="grid grid-cols-7 gap-0 mt-4">
+          <div className="grid grid-cols-7 gap-0">
             {monthGrid.map((week, wi) => (
               week.map((day) => {
                 const ds = toDateString(day)
@@ -419,28 +419,46 @@ export default function Menus() {
                 </div>
 
                 <div className="space-y-2">
-                  {createItems.map((row, idx) => (
-                    <div key={idx} className="flex gap-2 items-center">
-                      <select
-                        className="flex-1 border rounded px-2 py-1"
-                        value={row.food_id}
-                        onChange={(e) => handleUpdateItem(idx, 'food_id', e.target.value)}
-                      >
-                        <option value="">-- select item --</option>
-                        {Object.values(foodMap).map((f) => (
-                          <option key={f.id} value={f.id}>{f.name}</option>
-                        ))}
-                      </select>
-                      <input
-                        type="number"
-                        min="1"
-                        className="w-24 border rounded px-2 py-1"
-                        value={row.quantity}
-                        onChange={(e) => handleUpdateItem(idx, 'quantity', e.target.value)}
-                      />
-                      <button type="button" className="px-2 py-1 border rounded" onClick={() => handleRemoveItemRow(idx)}>−</button>
-                    </div>
-                  ))}
+                  {createItems.map((row, idx) => {
+                    const foodItem = foodMap[row.food_id]
+                    const lastServed = foodItem?.lastallocated ? new Date(foodItem.lastallocated).toLocaleDateString() : 'Never'
+                    
+                    return (
+                      <div key={idx} className="border rounded-lg p-3 bg-gray-50">
+                        <div className="flex gap-2 items-center mb-2">
+                          <select
+                            className="flex-1 border rounded px-2 py-1"
+                            value={row.food_id}
+                            onChange={(e) => handleUpdateItem(idx, 'food_id', e.target.value)}
+                          >
+                            <option value="">-- select item --</option>
+                            {Object.values(foodMap).map((f) => (
+                              <option key={f.id} value={f.id}>{f.name}</option>
+                            ))}
+                          </select>
+                          <button type="button" className="px-2 py-1 border rounded hover:bg-red-50 text-red-600" onClick={() => handleRemoveItemRow(idx)}>−</button>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1">
+                            <label className="text-xs text-gray-600">Quantity</label>
+                            <input
+                              type="number"
+                              min="1"
+                              className="w-full border rounded px-2 py-1"
+                              value={row.quantity}
+                              onChange={(e) => handleUpdateItem(idx, 'quantity', e.target.value)}
+                            />
+                          </div>
+                          {foodItem && (
+                            <div className="flex-1">
+                              <label className="text-xs text-gray-600">Last Served</label>
+                              <div className="text-sm font-medium text-gray-700 py-1">{lastServed}</div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
 
                 <div className="flex gap-2">
@@ -464,28 +482,46 @@ export default function Menus() {
 
               <div className="space-y-3">
                 <div className="space-y-2">
-                  {editItems.map((row, idx) => (
-                    <div key={idx} className="flex gap-2 items-center">
-                      <select
-                        className="flex-1 border rounded px-2 py-1"
-                        value={row.food_id}
-                        onChange={(e) => handleUpdateEditItem(idx, 'food_id', e.target.value)}
-                      >
-                        <option value="">-- select item --</option>
-                        {Object.values(foodMap).map((f) => (
-                          <option key={f.id} value={f.id}>{f.name}</option>
-                        ))}
-                      </select>
-                      <input
-                        type="number"
-                        min="1"
-                        className="w-24 border rounded px-2 py-1"
-                        value={row.quantity}
-                        onChange={(e) => handleUpdateEditItem(idx, 'quantity', e.target.value)}
-                      />
-                      <button type="button" className="px-2 py-1 border rounded" onClick={() => handleRemoveEditItemRow(idx)}>−</button>
-                    </div>
-                  ))}
+                  {editItems.map((row, idx) => {
+                    const foodItem = foodMap[row.food_id]
+                    const lastServed = foodItem?.lastallocated ? new Date(foodItem.lastallocated).toLocaleDateString() : 'Never'
+                    
+                    return (
+                      <div key={idx} className="border rounded-lg p-3 bg-gray-50">
+                        <div className="flex gap-2 items-center mb-2">
+                          <select
+                            className="flex-1 border rounded px-2 py-1"
+                            value={row.food_id}
+                            onChange={(e) => handleUpdateEditItem(idx, 'food_id', e.target.value)}
+                          >
+                            <option value="">-- select item --</option>
+                            {Object.values(foodMap).map((f) => (
+                              <option key={f.id} value={f.id}>{f.name}</option>
+                            ))}
+                          </select>
+                          <button type="button" className="px-2 py-1 border rounded hover:bg-red-50 text-red-600" onClick={() => handleRemoveEditItemRow(idx)}>−</button>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1">
+                            <label className="text-xs text-gray-600">Quantity</label>
+                            <input
+                              type="number"
+                              min="1"
+                              className="w-full border rounded px-2 py-1"
+                              value={row.quantity}
+                              onChange={(e) => handleUpdateEditItem(idx, 'quantity', e.target.value)}
+                            />
+                          </div>
+                          {foodItem && (
+                            <div className="flex-1">
+                              <label className="text-xs text-gray-600">Last Served</label>
+                              <div className="text-sm font-medium text-gray-700 py-1">{lastServed}</div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
 
                 <div className="flex gap-2">
