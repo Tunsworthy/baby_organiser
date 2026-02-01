@@ -5,6 +5,7 @@ import { useFoodStore } from '../store/foodStore'
 import FoodTable from '../components/FoodTable'
 import FoodForm from '../components/FoodForm'
 import Navbar from '../components/Navbar'
+import ErrorAlert from '../components/ErrorAlert'
 
 export default function FoodInventory() {
   const navigate = useNavigate()
@@ -64,9 +65,7 @@ export default function FoodInventory() {
       <main className="max-w-6xl mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-6">Food Inventory</h1>
         {formError && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
-            {formError}
-          </div>
+          <ErrorAlert message={formError} onDismiss={() => setFormError(null)} className="mb-6" />
         )}
 
         {/* Form Section */}

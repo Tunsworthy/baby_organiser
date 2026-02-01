@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { groupService } from '../services/groupService'
 import Navbar from '../components/Navbar'
+import ErrorAlert from '../components/ErrorAlert'
+import Modal from '../components/Modal'
+import { getRoleDisplay } from '../utils/roleUtils'
 
 export default function Groups() {
   const navigate = useNavigate()
@@ -54,12 +57,6 @@ export default function Groups() {
     navigate(`/groups/${groupId}`)
   }
 
-  const getRoleDisplay = (role) => {
-    if (role === 'owner') return '👑 Owner'
-    if (role === 'admin') return '🔑 Admin'
-    return '👤 Member'
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <Navbar />
@@ -75,9 +72,7 @@ export default function Groups() {
         </div>
 
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {error}
-          </div>
+          <ErrorAlert message={error} onDismiss={() => setError(null)} className="mb-4" />
         )}
 
         {isLoading ? (
@@ -109,40 +104,36 @@ export default function Groups() {
         )}
       </div>
 
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Create New Group</h2>
-            <form onSubmit={handleCreateGroup}>
-              <input
-                type="text"
-                placeholder="Group name"
-                value={groupName}
-                onChange={(e) => setGroupName(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-6 focus:outline-none focus:border-blue-500"
-                disabled={isCreating}
-              />
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowCreateModal(false)}
-                  className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg transition disabled:opacity-50"
-                  disabled={isCreating}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition disabled:opacity-50"
-                  disabled={isCreating || !groupName.trim()}
-                >
-                  {isCreating ? 'Creating...' : 'Create'}
-                </button>
-              </div>
-            </form>
+      {/* Create Modal */}
+      <Modal isOpen={showCreateModal} title="Create New Group" onClose={() => setShowCreateModal(false)}>
+        <form onSubmit={handleCreateGroup}>
+          <input
+            type="text"
+            placeholder="Group name"
+            value={groupName}
+            onChange={(e) => setGroupName(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-6 focus:outline-none focus:border-blue-500"
+            disabled={isCreating}
+          />
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => setShowCreateModal(false)}
+              className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg transition disabled:opacity-50"
+              disabled={isCreating}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition disabled:opacity-50"
+              disabled={isCreating || !groupName.trim()}
+            >
+              {isCreating ? 'Creating...' : 'Create'}
+            </button>
           </div>
-        </div>
-      )}
+        </form>
+      </Modal>
     </div>
   )
 }

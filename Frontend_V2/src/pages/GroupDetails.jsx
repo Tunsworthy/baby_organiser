@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { groupService } from '../services/groupService'
 import Navbar from '../components/Navbar'
+import ErrorAlert from '../components/ErrorAlert'
+import { getRoleDisplay } from '../utils/roleUtils'
 
 export default function GroupDetails() {
   const { groupId } = useParams()
@@ -96,12 +98,6 @@ export default function GroupDetails() {
     }
   }
 
-  const getRoleDisplay = (role) => {
-    if (role === 'owner') return '👑 Owner'
-    if (role === 'admin') return '🔑 Admin'
-    return '👤 Member'
-  }
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -148,9 +144,7 @@ export default function GroupDetails() {
         </div>
 
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {error}
-          </div>
+          <ErrorAlert message={error} onDismiss={() => setError(null)} className="mb-4" />
         )}
 
         {/* Invite Code Section */}

@@ -2,12 +2,14 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { useForm } from 'react-hook-form'
+import ErrorAlert from '../components/ErrorAlert'
+import { useFormError } from '../hooks/useFormError'
 
 export default function Register() {
   const navigate = useNavigate()
   const { register, handleSubmit, formState: { errors }, watch } = useForm()
   const [isLoading, setIsLoading] = useState(false)
-  const [errorMsg, setErrorMsg] = useState(null)
+  const { error, handleError, clearError } = useFormError()
   const registerUser = useAuthStore((state) => state.register)
   const setUser = useAuthStore((state) => state.setUser)
   const setAccessToken = useAuthStore((state) => state.setAccessToken)
@@ -16,7 +18,7 @@ export default function Register() {
 
   const onSubmit = async (data) => {
     setIsLoading(true)
-    setErrorMsg(null)
+    clearError()
     try {
       const result = await registerUser(
         data.email,
@@ -29,7 +31,7 @@ export default function Register() {
       localStorage.setItem('accessToken', result.accessToken)
       navigate('/dashboard')
     } catch (err) {
-      setErrorMsg(err.message || 'Registration failed')
+      handleError(err, 'Registration failed')
     } finally {
       setIsLoading(false)
     }
@@ -40,10 +42,8 @@ export default function Register() {
       <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
         <h1 className="text-3xl font-bold text-gray-900 mb-6 text-center">Create Account</h1>
 
-        {errorMsg && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
-            {errorMsg}
-          </div>
+        {error && (
+          <ErrorAlert message={error} onDismiss={clearError} className="mb-4" />
         )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

@@ -4,29 +4,12 @@ import { useAuthStore } from '../store/authStore'
 import { menuService } from '../services/menuService'
 import { foodService } from '../services/foodService'
 import Navbar from '../components/Navbar'
+import ErrorAlert from '../components/ErrorAlert'
+import Modal from '../components/Modal'
+import { useItemRows } from '../hooks/useItemRows'
+import { startOfMonth, endOfMonth, pad, toDateString, formatDisplayDate } from '../utils/dateUtils'
 
 const MEAL_TYPES = ['Lunch', 'Dinner']
-
-const formatDisplayDate = (dateString) => {
-  const date = new Date(`${dateString}T00:00:00`)
-  return date.toDateString()
-}
-
-function startOfMonth(date) {
-  return new Date(date.getFullYear(), date.getMonth(), 1)
-}
-
-function endOfMonth(date) {
-  return new Date(date.getFullYear(), date.getMonth() + 1, 0)
-}
-
-function pad(n) {
-  return n < 10 ? `0${n}` : `${n}`
-}
-
-function toDateString(d) {
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
-}
 
 export default function Menus() {
   const navigate = useNavigate()
@@ -43,14 +26,15 @@ export default function Menus() {
   }, [searchParams])
 
   const [calendarMonth, setCalendarMonth] = useState(() => startOfMonth(new Date()))
-  const [showCreate, setShowCreate] = useState(false)
-  const [createItems, setCreateItems] = useState([{ food_id: '', quantity: 1 }])
   const [createMeal, setCreateMeal] = useState('Lunch')
+  const [showCreate, setShowCreate] = useState(false)
   const [showEdit, setShowEdit] = useState(false)
   const [editMenu, setEditMenu] = useState(null)
-  const [editItems, setEditItems] = useState([])
   const [editingItemId, setEditingItemId] = useState(null)
   const [editingItemQty, setEditingItemQty] = useState(1)
+
+  const createItems = useItemRows()
+  const editItems = useItemRows()
 
   const datesWithMenus = useMemo(() => {
     const set = new Set()
@@ -138,15 +122,13 @@ export default function Menus() {
     return grid
   }
 
-  const handleAddItemRow = () => setCreateItems((s) => [...s, { food_id: '', quantity: 1 }])
-  const handleRemoveItemRow = (idx) => setCreateItems((s) => s.filter((_, i) => i !== idx))
-  const handleUpdateItem = (idx, key, value) =>
-    setCreateItems((s) => s.map((r, i) => (i === idx ? { ...r, [key]: value } : r)))
+  const handleAddItemRow = () => createItems.addRow()
+  const handleRemoveItemRow = (idx) => createItems.removeRow(idx)
+  const handleUpdateItem = (idx, key, value) => createItems.updateRow(idx, key, value)
 
-  const handleAddEditItemRow = () => setEditItems((s) => [...s, { food_id: '', quantity: 1 }])
-  const handleRemoveEditItemRow = (idx) => setEditItems((s) => s.filter((_, i) => i !== idx))
-  const handleUpdateEditItem = (idx, key, value) =>
-    setEditItems((s) => s.map((r, i) => (i === idx ? { ...r, [key]: value } : r)))
+  const handleAddEditItemRow = () => editItems.addRow()
+  const handleRemoveEditItemRow = (idx) => editItems.removeRow(idx)
+  const handleUpdateEditItem = (idx, key, value) => editItems.updateRow(idx, key, value)
 
   const handleCreateMenu = async () => {
     try {
@@ -154,14 +136,14 @@ export default function Menus() {
       const payload = {
         date: currentDate,
         type: createMeal,
-        items: createItems
+        items: createItems.items
           .filter((it) => it.food_id || it.name)
           .map((it) => ({ food_id: it.food_id || null, quantity: Number(it.quantity) || 1 }))
       }
 
       await menuService.createMenu(payload)
       setShowCreate(false)
-      setCreateItems([{ food_id: '', quantity: 1 }])
+      createItems.reset()
       // reload
       loadMenusForDate(currentDate)
       loadAllMenus()
@@ -249,14 +231,14 @@ export default function Menus() {
   const handleEditMenu = async () => {
     try {
       setError(null)
-      const updatedMenu = await menuService.updateMenu(editMenu.id, editItems)
+      const updatedMenu = await menuService.updateMenu(editMenu.id, editItems.items)
       setMenusByType((prev) => ({
         ...prev,
         [updatedMenu.type]: updatedMenu
       }))
       setShowEdit(false)
       setEditMenu(null)
-      setEditItems([])
+      editItems.reset()
       loadAllMenus()
     } catch (err) {
       setError(err.message || 'Failed to update menu')
@@ -330,7 +312,7 @@ export default function Menus() {
         </section>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">{error}</div>
+          <ErrorAlert message={error} onDismiss={() => setError(null)} />
         )}
 
         {isLoading ? (
@@ -488,137 +470,119 @@ export default function Menus() {
         )}
 
         {/* Create Modal */}
-        {showCreate && (
-          <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow p-6 w-full max-w-2xl">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">Create Menu for {formatDisplayDate(currentDate)}</h3>
-                <button onClick={() => setShowCreate(false)} className="text-gray-600">✕</button>
-              </div>
+        <Modal isOpen={showCreate} title={`Create Menu for ${formatDisplayDate(currentDate)}`} onClose={() => setShowCreate(false)} size="lg">
+          <div className="space-y-3">
+            <div className="flex gap-3 items-center">
+              <label className="font-medium">Meal:</label>
+              <select value={createMeal} onChange={(e) => setCreateMeal(e.target.value)} className="border rounded px-2 py-1">
+                {MEAL_TYPES.map(m => <option key={m} value={m}>{m}</option>)}
+              </select>
+            </div>
 
-              <div className="space-y-3">
-                <div className="flex gap-3 items-center">
-                  <label className="font-medium">Meal:</label>
-                  <select value={createMeal} onChange={(e) => setCreateMeal(e.target.value)} className="border rounded px-2 py-1">
-                    {MEAL_TYPES.map(m => <option key={m} value={m}>{m}</option>)}
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  {createItems.map((row, idx) => {
-                    const foodItem = foodMap[row.food_id]
-                    const lastServed = foodItem?.lastallocated ? new Date(foodItem.lastallocated).toLocaleDateString() : 'Never'
-                    
-                    return (
-                      <div key={idx} className="border rounded-lg p-3 bg-gray-50">
-                        <div className="flex gap-2 items-center mb-2">
-                          <select
-                            className="flex-1 border rounded px-2 py-1"
-                            value={row.food_id}
-                            onChange={(e) => handleUpdateItem(idx, 'food_id', e.target.value)}
-                          >
-                            <option value="">-- select item --</option>
-                            {Object.values(foodMap).map((f) => (
-                              <option key={f.id} value={f.id}>{f.name}</option>
-                            ))}
-                          </select>
-                          <button type="button" className="px-2 py-1 border rounded hover:bg-red-50 text-red-600" onClick={() => handleRemoveItemRow(idx)}>−</button>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1">
-                            <label className="text-xs text-gray-600">Quantity</label>
-                            <input
-                              type="number"
-                              min="1"
-                              className="w-full border rounded px-2 py-1"
-                              value={row.quantity}
-                              onChange={(e) => handleUpdateItem(idx, 'quantity', e.target.value)}
-                            />
-                          </div>
-                          {foodItem && (
-                            <div className="flex-1">
-                              <label className="text-xs text-gray-600">Last Served</label>
-                              <div className="text-sm font-medium text-gray-700 py-1">{lastServed}</div>
-                            </div>
-                          )}
-                        </div>
+            <div className="space-y-2">
+              {createItems.items.map((row, idx) => {
+                const foodItem = foodMap[row.food_id]
+                const lastServed = foodItem?.lastallocated ? new Date(foodItem.lastallocated).toLocaleDateString() : 'Never'
+                
+                return (
+                  <div key={idx} className="border rounded-lg p-3 bg-gray-50">
+                    <div className="flex gap-2 items-center mb-2">
+                      <select
+                        className="flex-1 border rounded px-2 py-1"
+                        value={row.food_id}
+                        onChange={(e) => handleUpdateItem(idx, 'food_id', e.target.value)}
+                      >
+                        <option value="">-- select item --</option>
+                        {Object.values(foodMap).map((f) => (
+                          <option key={f.id} value={f.id}>{f.name}</option>
+                        ))}
+                      </select>
+                      <button type="button" className="px-2 py-1 border rounded hover:bg-red-50 text-red-600" onClick={() => handleRemoveItemRow(idx)}>−</button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1">
+                        <label className="text-xs text-gray-600">Quantity</label>
+                        <input
+                          type="number"
+                          min="1"
+                          className="w-full border rounded px-2 py-1"
+                          value={row.quantity}
+                          onChange={(e) => handleUpdateItem(idx, 'quantity', e.target.value)}
+                        />
                       </div>
-                    )
-                  })}
-                </div>
+                      {foodItem && (
+                        <div className="flex-1">
+                          <label className="text-xs text-gray-600">Last Served</label>
+                          <div className="text-sm font-medium text-gray-700 py-1">{lastServed}</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
 
-                <div className="flex gap-2">
-                  <button type="button" className="px-3 py-1 border rounded" onClick={handleAddItemRow}>+ Add Item</button>
-                  <button type="button" className="px-4 py-2 bg-blue-600 text-white rounded" onClick={handleCreateMenu}>Create</button>
-                  <button type="button" className="px-4 py-2 border rounded" onClick={() => setShowCreate(false)}>Cancel</button>
-                </div>
-              </div>
+            <div className="flex gap-2">
+              <button type="button" className="px-3 py-1 border rounded" onClick={handleAddItemRow}>+ Add Item</button>
+              <button type="button" className="px-4 py-2 bg-blue-600 text-white rounded" onClick={handleCreateMenu}>Create</button>
+              <button type="button" className="px-4 py-2 border rounded" onClick={() => setShowCreate(false)}>Cancel</button>
             </div>
           </div>
-        )}
+        </Modal>
 
         {/* Edit Modal */}
-        {showEdit && editMenu && (
-          <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow p-6 w-full max-w-2xl">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">Edit {editMenu.type} Menu for {formatDisplayDate(currentDate)}</h3>
-                <button onClick={() => setShowEdit(false)} className="text-gray-600">✕</button>
-              </div>
-
-              <div className="space-y-3">
-                <div className="space-y-2">
-                  {editItems.map((row, idx) => {
-                    const foodItem = foodMap[row.food_id]
-                    const lastServed = foodItem?.lastallocated ? new Date(foodItem.lastallocated).toLocaleDateString() : 'Never'
-                    
-                    return (
-                      <div key={idx} className="border rounded-lg p-3 bg-gray-50">
-                        <div className="flex gap-2 items-center mb-2">
-                          <select
-                            className="flex-1 border rounded px-2 py-1"
-                            value={row.food_id}
-                            onChange={(e) => handleUpdateEditItem(idx, 'food_id', e.target.value)}
-                          >
-                            <option value="">-- select item --</option>
-                            {Object.values(foodMap).map((f) => (
-                              <option key={f.id} value={f.id}>{f.name}</option>
-                            ))}
-                          </select>
-                          <button type="button" className="px-2 py-1 border rounded hover:bg-red-50 text-red-600" onClick={() => handleRemoveEditItemRow(idx)}>−</button>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1">
-                            <label className="text-xs text-gray-600">Quantity</label>
-                            <input
-                              type="number"
-                              min="1"
-                              className="w-full border rounded px-2 py-1"
-                              value={row.quantity}
-                              onChange={(e) => handleUpdateEditItem(idx, 'quantity', e.target.value)}
-                            />
-                          </div>
-                          {foodItem && (
-                            <div className="flex-1">
-                              <label className="text-xs text-gray-600">Last Served</label>
-                              <div className="text-sm font-medium text-gray-700 py-1">{lastServed}</div>
-                            </div>
-                          )}
-                        </div>
+        <Modal isOpen={showEdit && !!editMenu} title={`Edit ${editMenu?.type} Menu for ${formatDisplayDate(currentDate)}`} onClose={() => setShowEdit(false)} size="lg">
+          <div className="space-y-3">
+            <div className="space-y-2">
+              {editItems.items.map((row, idx) => {
+                const foodItem = foodMap[row.food_id]
+                const lastServed = foodItem?.lastallocated ? new Date(foodItem.lastallocated).toLocaleDateString() : 'Never'
+                
+                return (
+                  <div key={idx} className="border rounded-lg p-3 bg-gray-50">
+                    <div className="flex gap-2 items-center mb-2">
+                      <select
+                        className="flex-1 border rounded px-2 py-1"
+                        value={row.food_id}
+                        onChange={(e) => handleUpdateEditItem(idx, 'food_id', e.target.value)}
+                      >
+                        <option value="">-- select item --</option>
+                        {Object.values(foodMap).map((f) => (
+                          <option key={f.id} value={f.id}>{f.name}</option>
+                        ))}
+                      </select>
+                      <button type="button" className="px-2 py-1 border rounded hover:bg-red-50 text-red-600" onClick={() => handleRemoveEditItemRow(idx)}>−</button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1">
+                        <label className="text-xs text-gray-600">Quantity</label>
+                        <input
+                          type="number"
+                          min="1"
+                          className="w-full border rounded px-2 py-1"
+                          value={row.quantity}
+                          onChange={(e) => handleUpdateEditItem(idx, 'quantity', e.target.value)}
+                        />
                       </div>
-                    )
-                  })}
-                </div>
+                      {foodItem && (
+                        <div className="flex-1">
+                          <label className="text-xs text-gray-600">Last Served</label>
+                          <div className="text-sm font-medium text-gray-700 py-1">{lastServed}</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
 
-                <div className="flex gap-2">
-                  <button type="button" className="px-3 py-1 border rounded" onClick={handleAddEditItemRow}>+ Add Item</button>
-                  <button type="button" className="px-4 py-2 bg-blue-600 text-white rounded" onClick={handleEditMenu}>Save</button>
-                  <button type="button" className="px-4 py-2 border rounded" onClick={() => setShowEdit(false)}>Cancel</button>
-                </div>
-              </div>
+            <div className="flex gap-2">
+              <button type="button" className="px-3 py-1 border rounded" onClick={handleAddEditItemRow}>+ Add Item</button>
+              <button type="button" className="px-4 py-2 bg-blue-600 text-white rounded" onClick={handleEditMenu}>Save</button>
+              <button type="button" className="px-4 py-2 border rounded" onClick={() => setShowEdit(false)}>Cancel</button>
             </div>
           </div>
-        )}
+        </Modal>
 
       </main>
     </div>

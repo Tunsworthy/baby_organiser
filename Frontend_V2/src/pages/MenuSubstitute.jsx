@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { menuService } from '../services/menuService'
 import { foodService } from '../services/foodService'
+import Navbar from '../components/Navbar'
+import ErrorAlert from '../components/ErrorAlert'
 
 export default function MenuSubstitute() {
   const [searchParams] = useSearchParams()
@@ -85,9 +87,7 @@ export default function MenuSubstitute() {
 
       <main className="max-w-4xl mx-auto px-4 py-8">
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
-            {error}
-          </div>
+          <ErrorAlert message={error} onDismiss={() => setError(null)} className="mb-4" />
         )}
 
         <div className="bg-white rounded-lg shadow p-6">
