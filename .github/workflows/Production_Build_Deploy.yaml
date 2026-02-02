@@ -75,4 +75,4 @@ jobs:
           token: ${{ secrets.DEPLOY_TOKEN }}
           repository: Tunsworthy/homeops
           event-type: deploy-container
-          client-payload: '{"branch": "main", "folder": "babytracker-backend"}'
+          client-payload: '{"branch": "main", "folder": "babytracker-test"}'
