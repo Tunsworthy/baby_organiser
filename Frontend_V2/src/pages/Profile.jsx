@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useAuthStore } from '../store/authStore'
 import userService from '../services/userService'
 import ErrorAlert from '../components/ErrorAlert'
+import Navbar from '../components/Navbar'
 
 export default function Profile() {
   const authUser = useAuthStore((s) => s.user)
@@ -66,7 +67,9 @@ export default function Profile() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto py-8">
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
+      <div className="max-w-3xl mx-auto px-4 py-8">
       <h1 className="text-2xl font-semibold mb-4">Profile Settings</h1>
 
       {error && <ErrorAlert message={error} onDismiss={() => setError(null)} className="mb-4" />}
@@ -118,6 +121,7 @@ export default function Profile() {
           </button>
         </div>
       </form>
+      </div>
     </div>
   )
 }

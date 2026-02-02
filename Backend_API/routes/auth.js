@@ -28,4 +28,10 @@ router.post('/refresh', userController.refreshToken);
  */
 router.get('/profile', authMiddleware, userController.getProfile);
 
+/**
+ * PUT /auth/profile
+ * Update current authenticated user's profile
+ */
+router.put('/profile', authMiddleware, userController.updateProfile);
+
 module.exports = router;

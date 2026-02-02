@@ -278,9 +278,63 @@ async function getProfile(req, res) {
   }
 }
 
+/**
+ * Update current user profile
+ */
+async function updateProfile(req, res) {
+  try {
+    const userId = req.user.userId;
+    const { firstName, lastName, email } = req.body;
+
+    // Validate required fields
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
+    // Check if email is already taken by another user
+    if (email) {
+      const existingUser = await pool.query(
+        'SELECT id FROM users WHERE email = $1 AND id != $2',
+        [email, userId]
+      );
+      if (existingUser.rows.length > 0) {
+        return res.status(409).json({ error: 'Email is already in use' });
+      }
+    }
+
+    // Update user
+    const updateResult = await pool.query(
+      `UPDATE users 
+       SET email = $1, firstName = $2, lastName = $3
+       WHERE id = $4
+       RETURNING id, email, firstName, lastName, authProvider, createdAt`,
+      [email, firstName || '', lastName || '', userId]
+    );
+
+    if (updateResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const user = updateResult.rows[0];
+    res.json({
+      id: user.id,
+      email: user.email,
+      firstName: user.firstname,
+      lastName: user.lastname,
+      authProvider: user.authprovider,
+      createdAt: user.createdat,
+      message: 'Profile updated successfully'
+    });
+  } catch (err) {
+    console.error('Update profile error:', err);
+    res.status(500).json({ error: 'Failed to update profile' });
+  }
+}
+
 module.exports = {
   register,
   login,
   refreshToken,
-  getProfile
+  getProfile,
+  updateProfile
 };

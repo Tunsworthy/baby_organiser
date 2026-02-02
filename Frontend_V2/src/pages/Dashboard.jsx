@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { useFoodStore } from '../store/foodStore'
 import { menuService } from '../services/menuService'
+import { getDisplayName } from '../utils/nameUtils'
 import Navbar from '../components/Navbar'
 
 export default function Dashboard() {
@@ -78,7 +79,7 @@ export default function Dashboard() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">
-          Welcome back, {getDisplayName()}!
+          Welcome back, {getDisplayName(user)}!
         </h1>
 
         {/* Quick Actions */}

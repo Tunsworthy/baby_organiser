@@ -7,6 +7,7 @@ import Navbar from '../components/Navbar'
 import ErrorAlert from '../components/ErrorAlert'
 import Modal from '../components/Modal'
 import { getRoleDisplay } from '../utils/roleUtils'
+import { getMemberDisplayName } from '../utils/nameUtils'
 
 export default function GroupDetails() {
   const { groupId } = useParams()
@@ -29,11 +30,6 @@ export default function GroupDetails() {
   const [showInviteMember, setShowInviteMember] = useState(false)
   const [inviteEmail, setInviteEmail] = useState('')
   const [isInvitingMember, setIsInvitingMember] = useState(false)
-
-  const getMemberDisplayName = (member) => {
-    const fullName = [member?.firstName, member?.lastName].filter(Boolean).join(' ')
-    return fullName || member?.email || 'Member'
-  }
 
   const isOwner = group && user && group.user_role?.toLowerCase() === 'owner'
 
