@@ -16,7 +16,7 @@ import {
   clampDuration
 } from '../utils/scheduleUtils'
 
-const HOURS = Array.from({ length: 24 }, (_, i) => i)
+const TIME_BLOCKS = Array.from({ length: 48 }, (_, i) => i * 30)
 
 export default function Schedules() {
   const [children, setChildren] = useState([])
@@ -49,6 +49,7 @@ export default function Schedules() {
 
   const dragStateRef = useRef(null)
   const itemsRef = useRef([])
+  const scheduleContainerRef = useRef(null)
 
   const selectedSchedule = useMemo(
     () => schedules.find((s) => String(s.id) === String(selectedScheduleId)),
@@ -75,6 +76,13 @@ export default function Schedules() {
   useEffect(() => {
     itemsRef.current = items
   }, [items])
+
+  useEffect(() => {
+    if (scheduleContainerRef.current) {
+      const sevenAmPosition = 7 * 60 * PIXELS_PER_MINUTE
+      scheduleContainerRef.current.scrollTop = sevenAmPosition
+    }
+  }, [selectedScheduleId])
 
   useEffect(() => {
     if (!selectedItemId) return
@@ -350,6 +358,37 @@ export default function Schedules() {
     }
   }
 
+  const handleScheduleClick = async (e) => {
+    if (!selectedScheduleId) return
+    if (e.target !== e.currentTarget && !e.target.classList.contains('time-block')) return
+
+    const rect = e.currentTarget.getBoundingClientRect()
+    const y = e.clientY - rect.top + e.currentTarget.scrollTop
+    const clickedMinutes = Math.floor(y / PIXELS_PER_MINUTE)
+    const snappedStart = snapMinutes(clickedMinutes)
+    const snappedEnd = snappedStart + SNAP_MINUTES
+
+    const startTime = minutesToTime(snappedStart)
+    const endTime = minutesToTime(snappedEnd)
+
+    setIsLoading(true)
+    setError(null)
+    try {
+      const newItem = await scheduleService.createItem(selectedScheduleId, {
+        activityName: 'New Activity',
+        startTime,
+        endTime,
+        sortOrder: items.length
+      })
+      setItems((prev) => [...prev, newItem])
+      setSelectedItemId(newItem.id)
+    } catch (err) {
+      setError('Failed to create item')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const scheduleItems = items.map((item) => {
     const start = timeToMinutes(item.startTime)
     const end = timeToMinutes(item.endTime)
@@ -490,15 +529,25 @@ export default function Schedules() {
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
               <div className="lg:col-span-3 bg-white rounded-lg shadow p-4">
                 <div className="text-sm text-gray-600 mb-2">
-                  Drag to move, resize to change duration. Snap: {SNAP_MINUTES} min.
+                  Drag to move, resize to change duration, or click to create. Snap: {SNAP_MINUTES} min.
                 </div>
-                <div className="relative border rounded-lg overflow-y-auto" style={{ height: 600 }}>
+                <div 
+                  ref={scheduleContainerRef}
+                  onClick={handleScheduleClick}
+                  className="relative border rounded-lg overflow-y-auto cursor-pointer" 
+                  style={{ height: 600 }}
+                >
                   <div style={{ height: MINUTES_IN_DAY * PIXELS_PER_MINUTE, position: 'relative' }}>
-                    {HOURS.map((hour) => (
-                      <div key={hour} className="absolute left-0 right-0 border-t border-gray-200" style={{ top: hour * 60 * PIXELS_PER_MINUTE }}>
-                        <span className="absolute left-2 -top-2 text-xs text-gray-400">{String(hour).padStart(2, '0')}:00</span>
-                      </div>
-                    ))}
+                    {TIME_BLOCKS.map((minutes) => {
+                      const hour = Math.floor(minutes / 60)
+                      const minute = minutes % 60
+                      const timeLabel = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
+                      return (
+                        <div key={minutes} className="time-block absolute left-0 right-0 border-t border-gray-200" style={{ top: minutes * PIXELS_PER_MINUTE }}>
+                          <span className="absolute left-2 -top-3 text-xs text-gray-500 bg-white px-1">{timeLabel}</span>
+                        </div>
+                      )
+                    })}
                     {scheduleItems}
                   </div>
                 </div>
