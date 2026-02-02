@@ -96,7 +96,7 @@ export default function Groups() {
                   👥 {group.member_count || 1} member{group.member_count !== 1 ? 's' : ''}
                 </p>
                 <div className="text-sm text-indigo-600 font-semibold">
-                  {getRoleDisplay(group.user_role)}
+                  {getRoleDisplay(group.user_role || group.role)}
                 </div>
               </div>
             ))}

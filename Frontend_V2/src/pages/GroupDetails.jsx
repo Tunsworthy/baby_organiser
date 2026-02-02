@@ -30,6 +30,11 @@ export default function GroupDetails() {
   const [inviteEmail, setInviteEmail] = useState('')
   const [isInvitingMember, setIsInvitingMember] = useState(false)
 
+  const getMemberDisplayName = (member) => {
+    const fullName = [member?.firstName, member?.lastName].filter(Boolean).join(' ')
+    return fullName || member?.email || 'Member'
+  }
+
   const isOwner = group && user && group.user_role?.toLowerCase() === 'owner'
 
   useEffect(() => {
@@ -42,8 +47,12 @@ export default function GroupDetails() {
     setError(null)
     try {
       const data = await groupService.getById(groupId)
-      setGroup(data)
-      setMembers(data.members || [])
+      const groupData = data.group || data
+      const membersData = data.members || groupData.members || []
+      const currentMember = membersData.find((m) => m.id === user?.id)
+      const userRole = currentMember?.role || groupData.user_role || groupData.role
+      setGroup({ ...groupData, user_role: userRole })
+      setMembers(membersData)
     } catch (err) {
       setError('Failed to load group details')
       console.error(err)
@@ -324,7 +333,7 @@ export default function GroupDetails() {
               <tbody>
                 {members.map((member, idx) => (
                   <tr key={member.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                    <td className="px-6 py-4 text-gray-800">{member.name}</td>
+                    <td className="px-6 py-4 text-gray-800">{getMemberDisplayName(member)}</td>
                     <td className="px-6 py-4 text-gray-600">{member.email}</td>
                     <td className="px-6 py-4">
                       {editingMemberId === member.id && isOwner ? (

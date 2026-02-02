@@ -10,6 +10,11 @@ export default function Navbar() {
   const [showMobileMenu, setShowMobileMenu] = useState(false)
   const [showProfileMenu, setShowProfileMenu] = useState(false)
 
+  const getDisplayName = () => {
+    const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(' ')
+    return fullName || user?.email || 'User'
+  }
+
   const handleLogout = () => {
     logout()
     navigate('/login')
@@ -67,8 +72,8 @@ export default function Navbar() {
               <div className="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
                 <div className="py-1">
                   <div className="px-4 py-2 text-sm text-gray-700 border-b border-gray-200">
-                    <div className="font-semibold">{user?.firstName || 'User'} {user?.lastName || ''}</div>
-                    <div className="text-gray-500 truncate">{user?.email}</div>
+                    <div className="font-semibold">{getDisplayName()}</div>
+                    <div className="text-gray-500 truncate">{user?.email || ''}</div>
                   </div>
                   <button
                     onClick={() => {

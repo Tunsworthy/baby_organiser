@@ -14,6 +14,11 @@ export default function Dashboard() {
   const [upcomingMenus, setUpcomingMenus] = useState([])
   const [isLoadingMenus, setIsLoadingMenus] = useState(false)
 
+  const getDisplayName = () => {
+    const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(' ')
+    return fullName || user?.email || 'User'
+  }
+
   useEffect(() => {
     if (!accessToken) {
       navigate('/login')
@@ -73,7 +78,7 @@ export default function Dashboard() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">
-          Welcome back, {user?.firstName || 'User'}!
+          Welcome back, {getDisplayName()}!
         </h1>
 
         {/* Quick Actions */}
