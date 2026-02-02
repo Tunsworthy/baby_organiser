@@ -169,10 +169,15 @@ async function generateInviteCode(req, res) {
     const inviteCode = crypto.randomBytes(16).toString('hex');
     const expiresAt = new Date(Date.now() + INVITE_CODE_EXPIRY);
 
-    // Store invite code (using a temporary solution - in production use a table)
-    // For now, we'll encode group info in the token
+    // Store invite code in database
+    await pool.query(
+      `INSERT INTO group_invites (inviteCode, groupId, createdBy, expiresAt) 
+       VALUES ($1, $2, $3, $4)`,
+      [inviteCode, groupId, userId, expiresAt]
+    );
+
     res.json({
-      inviteCode,
+      invite_code: inviteCode,
       expiresAt,
       groupId,
       message: 'Share this invite code with new members'
@@ -187,19 +192,60 @@ async function generateInviteCode(req, res) {
  * Accept invite code and join group
  */
 async function acceptInvite(req, res) {
-  const { inviteCode } = req.body;
+  const { invite_code } = req.body;
   const userId = req.user.userId;
 
-  if (!inviteCode) {
+  if (!invite_code) {
     return res.status(400).json({ error: 'Invite code is required' });
   }
 
-  // TODO: Verify invite code against database
-  // For now, we'll implement a basic validation
-
   try {
-    // This is a placeholder - in production, validate against an invites table
-    res.status(400).json({ error: 'Invite code validation not yet implemented' });
+    // Validate invite code
+    const inviteResult = await pool.query(
+      `SELECT * FROM group_invites 
+       WHERE inviteCode = $1 AND expiresAt > NOW() AND usedBy IS NULL`,
+      [invite_code]
+    );
+
+    if (inviteResult.rows.length === 0) {
+      return res.status(400).json({ error: 'Invalid or expired invite code' });
+    }
+
+    const invite = inviteResult.rows[0];
+    const groupId = invite.groupid;
+
+    // Check if user is already a member
+    const memberCheck = await pool.query(
+      `SELECT * FROM user_groups WHERE userId = $1 AND groupId = $2`,
+      [userId, groupId]
+    );
+
+    if (memberCheck.rows.length > 0) {
+      return res.status(400).json({ error: 'You are already a member of this group' });
+    }
+
+    // Add user to group
+    await pool.query(
+      `INSERT INTO user_groups (userId, groupId, role) VALUES ($1, $2, 'member')`,
+      [userId, groupId]
+    );
+
+    // Mark invite as used
+    await pool.query(
+      `UPDATE group_invites SET usedBy = $1, usedAt = NOW() WHERE id = $2`,
+      [userId, invite.id]
+    );
+
+    // Get group details
+    const groupResult = await pool.query(
+      `SELECT * FROM groups WHERE id = $1`,
+      [groupId]
+    );
+
+    res.json({
+      message: 'Successfully joined group',
+      group: groupResult.rows[0]
+    });
   } catch (err) {
     console.error('Accept invite error:', err);
     res.status(500).json({ error: 'Failed to accept invite' });

@@ -279,6 +279,33 @@ const alterMenuItemsTableQuery = `
 `;
 
 // ============================================================================
+// GROUP_INVITES TABLE
+// ============================================================================
+const checkGroupInvitesTableExistsQuery = `
+SELECT EXISTS (
+  SELECT FROM 
+    pg_catalog.pg_tables 
+  WHERE 
+    schemaname != 'pg_catalog' 
+    AND schemaname != 'information_schema'
+    AND tablename = 'group_invites'
+);
+`;
+
+const createGroupInvitesTableQuery = `
+CREATE TABLE IF NOT EXISTS group_invites (
+  id SERIAL PRIMARY KEY,
+  inviteCode VARCHAR(255) UNIQUE NOT NULL,
+  groupId INTEGER NOT NULL REFERENCES groups (id) ON DELETE CASCADE,
+  createdBy INTEGER NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+  expiresAt TIMESTAMP WITH TIME ZONE NOT NULL,
+  createdAt TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  usedBy INTEGER REFERENCES users (id) ON DELETE SET NULL,
+  usedAt TIMESTAMP WITH TIME ZONE
+);
+`;
+
+// ============================================================================
 // SCHEDULES TABLE
 // ============================================================================
 const checkSchedulesTableExistsQuery = `

@@ -16,6 +16,9 @@ export default function Groups() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [groupName, setGroupName] = useState('')
   const [isCreating, setIsCreating] = useState(false)
+  const [showJoinModal, setShowJoinModal] = useState(false)
+  const [inviteCode, setInviteCode] = useState('')
+  const [isJoining, setIsJoining] = useState(false)
 
   useEffect(() => {
     loadGroups()
@@ -53,6 +56,25 @@ export default function Groups() {
     }
   }
 
+  const handleJoinGroup = async (e) => {
+    e.preventDefault()
+    if (!inviteCode.trim()) return
+
+    setIsJoining(true)
+    setError(null)
+    try {
+      await groupService.acceptInvite(inviteCode)
+      setInviteCode('')
+      setShowJoinModal(false)
+      await loadGroups()
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to join group')
+      console.error(err)
+    } finally {
+      setIsJoining(false)
+    }
+  }
+
   const handleGroupClick = (groupId) => {
     navigate(`/groups/${groupId}`)
   }
@@ -63,12 +85,20 @@ export default function Groups() {
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-4xl font-bold text-gray-800">Groups</h1>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition"
-          >
-            + Create Group
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowJoinModal(true)}
+              className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition"
+            >
+              Join Group
+            </button>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition"
+            >
+              + Create Group
+            </button>
+          </div>
         </div>
 
         {error && (
@@ -103,6 +133,37 @@ export default function Groups() {
           </div>
         )}
       </div>
+
+      {/* Join Group Modal */}
+      <Modal isOpen={showJoinModal} title="Join Group" onClose={() => setShowJoinModal(false)}>
+        <form onSubmit={handleJoinGroup}>
+          <input
+            type="text"
+            placeholder="Enter invite code"
+            value={inviteCode}
+            onChange={(e) => setInviteCode(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-6 focus:outline-none focus:border-green-500"
+            disabled={isJoining}
+          />
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => setShowJoinModal(false)}
+              className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg transition disabled:opacity-50"
+              disabled={isJoining}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition disabled:opacity-50"
+              disabled={isJoining || !inviteCode.trim()}
+            >
+              {isJoining ? 'Joining...' : 'Join'}
+            </button>
+          </div>
+        </form>
+      </Modal>
 
       {/* Create Modal */}
       <Modal isOpen={showCreateModal} title="Create New Group" onClose={() => setShowCreateModal(false)}>

@@ -360,10 +360,14 @@ export default function Schedules() {
 
   const handleScheduleClick = async (e) => {
     if (!selectedScheduleId) return
-    if (e.target !== e.currentTarget && !e.target.classList.contains('time-block')) return
+    // Don't create item if clicking on an existing item or its children
+    if (e.target.closest('.schedule-item')) return
 
-    const rect = e.currentTarget.getBoundingClientRect()
-    const y = e.clientY - rect.top + e.currentTarget.scrollTop
+    const container = scheduleContainerRef.current
+    if (!container) return
+
+    const rect = container.getBoundingClientRect()
+    const y = e.clientY - rect.top + container.scrollTop
     const clickedMinutes = Math.floor(y / PIXELS_PER_MINUTE)
     const snappedStart = snapMinutes(clickedMinutes)
     const snappedEnd = snappedStart + SNAP_MINUTES
@@ -399,7 +403,7 @@ export default function Schedules() {
     return (
       <div
         key={item.id}
-        className={`absolute left-16 right-4 rounded border p-2 text-xs shadow-sm ${
+        className={`schedule-item absolute left-16 right-4 rounded border p-2 text-xs shadow-sm ${
           isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-300 bg-white'
         }`}
         style={{ top, height }}
