@@ -126,6 +126,13 @@ export default function Navbar() {
               Menus
             </Link>
             <Link
+              to="/schedules"
+              onClick={() => setShowMobileMenu(false)}
+              className="block px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600"
+            >
+              Schedules
+            </Link>
+            <Link
               to="/groups"
               onClick={() => setShowMobileMenu(false)}
               className="block px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600"

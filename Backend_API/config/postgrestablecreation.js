@@ -278,6 +278,85 @@ const alterMenuItemsTableQuery = `
   ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
 `;
 
+// ============================================================================
+// SCHEDULES TABLE
+// ============================================================================
+const checkSchedulesTableExistsQuery = `
+SELECT EXISTS (
+  SELECT FROM 
+    pg_catalog.pg_tables 
+  WHERE 
+    schemaname != 'pg_catalog' 
+    AND schemaname != 'information_schema'
+    AND tablename = 'schedules'
+);
+`;
+
+const createSchedulesTableQuery = `
+CREATE TABLE IF NOT EXISTS schedules (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  childId INTEGER NOT NULL REFERENCES children (id) ON DELETE CASCADE,
+  groupId INTEGER NOT NULL REFERENCES groups (id) ON DELETE CASCADE,
+  isActive BOOLEAN DEFAULT false,
+  createdBy INTEGER REFERENCES users (id) ON DELETE SET NULL,
+  createdAt TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+`;
+
+const alterSchedulesTableQuery = `
+  ALTER TABLE schedules ADD COLUMN IF NOT EXISTS name VARCHAR(255);
+  ALTER TABLE schedules ADD COLUMN IF NOT EXISTS childId INTEGER REFERENCES children (id) ON DELETE CASCADE;
+  ALTER TABLE schedules ADD COLUMN IF NOT EXISTS groupId INTEGER REFERENCES groups (id) ON DELETE CASCADE;
+  ALTER TABLE schedules ADD COLUMN IF NOT EXISTS isActive BOOLEAN DEFAULT false;
+  ALTER TABLE schedules ADD COLUMN IF NOT EXISTS createdBy INTEGER REFERENCES users (id) ON DELETE SET NULL;
+  ALTER TABLE schedules ADD COLUMN IF NOT EXISTS createdAt TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
+  ALTER TABLE schedules ADD COLUMN IF NOT EXISTS updatedAt TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
+`;
+
+// ============================================================================
+// SCHEDULE_ITEMS TABLE
+// ============================================================================
+const checkScheduleItemsTableExistsQuery = `
+SELECT EXISTS (
+  SELECT FROM 
+    pg_catalog.pg_tables 
+  WHERE 
+    schemaname != 'pg_catalog' 
+    AND schemaname != 'information_schema'
+    AND tablename = 'schedule_items'
+);
+`;
+
+const createScheduleItemsTableQuery = `
+CREATE TABLE IF NOT EXISTS schedule_items (
+  id SERIAL PRIMARY KEY,
+  scheduleId INTEGER NOT NULL REFERENCES schedules (id) ON DELETE CASCADE,
+  startTime TIME NOT NULL,
+  endTime TIME NOT NULL,
+  activityName VARCHAR(255) NOT NULL,
+  description TEXT,
+  notes TEXT,
+  sortOrder INTEGER DEFAULT 0,
+  createdAt TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT schedule_items_time_check CHECK (endTime > startTime)
+);
+`;
+
+const alterScheduleItemsTableQuery = `
+  ALTER TABLE schedule_items ADD COLUMN IF NOT EXISTS scheduleId INTEGER REFERENCES schedules (id) ON DELETE CASCADE;
+  ALTER TABLE schedule_items ADD COLUMN IF NOT EXISTS startTime TIME;
+  ALTER TABLE schedule_items ADD COLUMN IF NOT EXISTS endTime TIME;
+  ALTER TABLE schedule_items ADD COLUMN IF NOT EXISTS activityName VARCHAR(255);
+  ALTER TABLE schedule_items ADD COLUMN IF NOT EXISTS description TEXT;
+  ALTER TABLE schedule_items ADD COLUMN IF NOT EXISTS notes TEXT;
+  ALTER TABLE schedule_items ADD COLUMN IF NOT EXISTS sortOrder INTEGER DEFAULT 0;
+  ALTER TABLE schedule_items ADD COLUMN IF NOT EXISTS createdAt TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
+  ALTER TABLE schedule_items ADD COLUMN IF NOT EXISTS updatedAt TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
+`;
+
 async function ensureTableExists(checkTableExistsQuery, createTableQuery,alterTableQuery, tableName) {
   const client = await pool.connect();
   try {
@@ -307,6 +386,8 @@ async function ensureAllTables() {
   await ensureTableExists(checkAlertsTableExistsQuery, createAlertsTableQuery, alterAlertsTableQuery, 'Alerts');
   await ensureTableExists(checkMenusTableExistsQuery, createMenusTableQuery, alterMenusTableQuery, 'Menus');
   await ensureTableExists(checkMenuItemsTableExistsQuery, createMenuItemsTableQuery, alterMenuItemsTableQuery, 'Menu_Items');
+  await ensureTableExists(checkSchedulesTableExistsQuery, createSchedulesTableQuery, alterSchedulesTableQuery, 'Schedules');
+  await ensureTableExists(checkScheduleItemsTableExistsQuery, createScheduleItemsTableQuery, alterScheduleItemsTableQuery, 'Schedule_Items');
 }
 
 module.exports = ensureAllTables;

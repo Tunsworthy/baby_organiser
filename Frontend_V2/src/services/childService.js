@@ -1,8 +1,10 @@
 import apiClient from './apiClient'
 
 export const childService = {
-  async getAll() {
-    const response = await apiClient.get('/api/children')
+  async getAll(groupId) {
+    const response = await apiClient.get('/api/children', {
+      params: groupId ? { groupId } : undefined
+    })
     const data = response.data
     return Array.isArray(data) ? data : (data?.children || [])
   },

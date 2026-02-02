@@ -18,6 +18,8 @@ const childRoutes = require('./routes/children');
 const foodRoutes = require('./routes/foodRoutes');
 const menuRoutes = require('./routes/menus');
 const alertRoutes = require('./routes/alerts');
+const scheduleRoutes = require('./routes/schedules');
+const scheduleItemsRoutes = require('./routes/scheduleItems');
 const feedsyncRoutes = require('./routes/feedsyncRoutes');
 
 // Add error handling for both pools
@@ -52,6 +54,8 @@ app.use('/api/children', authMiddleware, childRoutes);
 app.use('/api/items', authMiddleware, foodRoutes);
 app.use('/api/menus', authMiddleware, menuRoutes);
 app.use('/api/alerts', authMiddleware, alertRoutes);
+app.use('/api/schedules', authMiddleware, scheduleRoutes);
+app.use('/api/schedule-items', authMiddleware, scheduleItemsRoutes);
 app.use('/api/feed', feedsyncRoutes);
 
 // Health check endpoint

@@ -41,15 +41,26 @@ async function createChild(req, res) {
  * List all children in the group
  */
 async function listChildren(req, res) {
-  const groupId = req.user.groupId;
+  const userId = req.user.userId;
+  const requestedGroupId = req.query.groupId || req.user.groupId;
 
   try {
+    if (req.query.groupId) {
+      const memberResult = await pool.query(
+        'SELECT 1 FROM user_groups WHERE userId = $1 AND groupId = $2',
+        [userId, requestedGroupId]
+      );
+      if (memberResult.rows.length === 0) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+    }
+
     const result = await pool.query(
       `SELECT id, name, groupId, createdBy, createdAt, updatedAt
        FROM children
        WHERE groupId = $1
        ORDER BY createdAt DESC`,
-      [groupId]
+      [requestedGroupId]
     );
 
     res.json({

@@ -11,6 +11,7 @@ import MenuSubstitute from './pages/MenuSubstitute'
 import Groups from './pages/Groups'
 import GroupDetails from './pages/GroupDetails'
 import Profile from './pages/Profile'
+import Schedules from './pages/Schedules'
 
 function App() {
   const checkAuth = useAuthStore((state) => state.checkAuth)
@@ -51,6 +52,14 @@ function App() {
             element={
               <PrivateRoute>
                 <Menus />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/schedules"
+            element={
+              <PrivateRoute>
+                <Schedules />
               </PrivateRoute>
             }
           />
