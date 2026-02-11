@@ -16,7 +16,12 @@ import {
   clampDuration
 } from '../utils/scheduleUtils'
 
-const TIME_BLOCKS = Array.from({ length: 48 }, (_, i) => i * 30)
+const VIEW_START_MIN = 6 * 60 // 06:00
+const VIEW_END_MIN = 20 * 60 // 20:00
+const TIME_BLOCKS = Array.from(
+  { length: Math.floor((VIEW_END_MIN - VIEW_START_MIN) / SNAP_MINUTES) + 1 },
+  (_, i) => VIEW_START_MIN + i * SNAP_MINUTES
+)
 
 export default function Schedules() {
   const [children, setChildren] = useState([])
@@ -79,7 +84,8 @@ export default function Schedules() {
 
   useEffect(() => {
     if (scheduleContainerRef.current) {
-      const sevenAmPosition = 7 * 60 * PIXELS_PER_MINUTE
+      // scroll to ~7am within the view (offset from VIEW_START_MIN)
+      const sevenAmPosition = Math.max(0, (7 * 60 - VIEW_START_MIN) * PIXELS_PER_MINUTE)
       scheduleContainerRef.current.scrollTop = sevenAmPosition
     }
   }, [selectedScheduleId])
@@ -368,9 +374,13 @@ export default function Schedules() {
 
     const rect = container.getBoundingClientRect()
     const y = e.clientY - rect.top + container.scrollTop
-    const clickedMinutes = Math.floor(y / PIXELS_PER_MINUTE)
+    // clicked minutes relative to view start, clamped to 6am–8pm
+    const clickedMinutes = Math.min(
+      VIEW_END_MIN - SNAP_MINUTES,
+      Math.max(VIEW_START_MIN, Math.floor(y / PIXELS_PER_MINUTE) + VIEW_START_MIN)
+    )
     const snappedStart = snapMinutes(clickedMinutes)
-    const snappedEnd = snappedStart + SNAP_MINUTES
+    const snappedEnd = Math.min(snappedStart + SNAP_MINUTES, VIEW_END_MIN)
 
     const startTime = minutesToTime(snappedStart)
     const endTime = minutesToTime(snappedEnd)
@@ -396,8 +406,12 @@ export default function Schedules() {
   const scheduleItems = items.map((item) => {
     const start = timeToMinutes(item.startTime)
     const end = timeToMinutes(item.endTime)
-    const top = start * PIXELS_PER_MINUTE
-    const height = Math.max((end - start) * PIXELS_PER_MINUTE, MIN_DURATION_MINUTES * PIXELS_PER_MINUTE)
+    // Only render items that intersect the view window
+    if (end <= VIEW_START_MIN || start >= VIEW_END_MIN) return null
+    const visibleStart = Math.max(start, VIEW_START_MIN)
+    const visibleEnd = Math.min(end, VIEW_END_MIN)
+    const top = (visibleStart - VIEW_START_MIN) * PIXELS_PER_MINUTE
+    const height = Math.max((visibleEnd - visibleStart) * PIXELS_PER_MINUTE, MIN_DURATION_MINUTES * PIXELS_PER_MINUTE)
     const isSelected = item.id === selectedItemId
 
     return (
@@ -541,13 +555,13 @@ export default function Schedules() {
                   className="relative border rounded-lg overflow-y-auto cursor-pointer" 
                   style={{ height: 600 }}
                 >
-                  <div style={{ height: MINUTES_IN_DAY * PIXELS_PER_MINUTE, position: 'relative' }}>
+                  <div style={{ height: (VIEW_END_MIN - VIEW_START_MIN) * PIXELS_PER_MINUTE, position: 'relative' }}>
                     {TIME_BLOCKS.map((minutes) => {
                       const hour = Math.floor(minutes / 60)
                       const minute = minutes % 60
                       const timeLabel = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
                       return (
-                        <div key={minutes} className="time-block absolute left-0 right-0 border-t border-gray-200" style={{ top: minutes * PIXELS_PER_MINUTE }}>
+                        <div key={minutes} className="time-block absolute left-0 right-0 border-t border-gray-200" style={{ top: (minutes - VIEW_START_MIN) * PIXELS_PER_MINUTE }}>
                           <span className="absolute left-2 -top-3 text-xs text-gray-500 bg-white px-1">{timeLabel}</span>
                         </div>
                       )
