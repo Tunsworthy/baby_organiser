@@ -1,7 +1,7 @@
 export const SNAP_MINUTES = 15
 export const MIN_DURATION_MINUTES = 15
 export const MINUTES_IN_DAY = 24 * 60
-export const PIXELS_PER_MINUTE = 1
+export const PIXELS_PER_MINUTE = 4
 
 export function timeToMinutes(time) {
   if (!time) return 0
